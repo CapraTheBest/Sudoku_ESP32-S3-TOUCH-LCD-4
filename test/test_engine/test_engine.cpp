@@ -1,6 +1,7 @@
 #include <unity.h>
 #include "sudoku_types.h"
 #include "sudoku_solver.h"
+#include "sudoku_board.h"
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -33,6 +34,38 @@ static const uint8_t SOLUTION[81] = {
     3,4,5, 2,8,6, 1,7,9
 };
 
+// Costruisce una maschera given: true dove PUZZLE != 0.
+static void givenMaskFromPuzzle(bool out[81]) {
+    for (int i = 0; i < 81; i++) out[i] = (PUZZLE[i] != 0);
+}
+
+void test_board_reset_sets_given_values(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    // Una cella data deve avere il valore della soluzione ed essere "given".
+    TEST_ASSERT_EQUAL_UINT8(5, b.value(0));   // PUZZLE[0]=5
+    TEST_ASSERT_TRUE(b.isGiven(0));
+    // Una cella non data deve essere vuota e modificabile.
+    TEST_ASSERT_EQUAL_UINT8(0, b.value(2));   // PUZZLE[2]=0
+    TEST_ASSERT_FALSE(b.isGiven(2));
+}
+
+void test_board_setvalue_respects_given(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    // Su cella data: no-op, ritorna false.
+    TEST_ASSERT_FALSE(b.setValue(0, 7));
+    TEST_ASSERT_EQUAL_UINT8(5, b.value(0));
+    // Su cella libera: ok.
+    TEST_ASSERT_TRUE(b.setValue(2, 4));
+    TEST_ASSERT_EQUAL_UINT8(4, b.value(2));
+    // Cancellazione con 0.
+    TEST_ASSERT_TRUE(b.setValue(2, 0));
+    TEST_ASSERT_EQUAL_UINT8(0, b.value(2));
+}
+
 void test_solve_fills_known_puzzle(void) {
     uint8_t g[81];
     for (int i = 0; i < 81; i++) g[i] = PUZZLE[i];
@@ -53,6 +86,8 @@ void test_count_empty_grid_is_capped_at_limit(void) {
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_scaffolding_builds);
+    RUN_TEST(test_board_reset_sets_given_values);
+    RUN_TEST(test_board_setvalue_respects_given);
     RUN_TEST(test_solve_fills_known_puzzle);
     RUN_TEST(test_count_unique_puzzle_is_one);
     RUN_TEST(test_count_empty_grid_is_capped_at_limit);
