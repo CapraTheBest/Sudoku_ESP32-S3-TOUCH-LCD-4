@@ -36,7 +36,15 @@ bool Board::undo() {
     value_[m.idx] = m.oldVal;
     return true;
 }
-// isComplete/isSolved: Task 6.
+bool Board::isComplete() const {
+    for (int i = 0; i < CELLS; i++) if (value_[i] == 0) return false;
+    return true;
+}
+
+bool Board::isSolved() const {
+    for (int i = 0; i < CELLS; i++) if (value_[i] != solution_[i]) return false;
+    return true;
+}
 // conflicts: Task 7.
 
 int Board::filledCount() const {

@@ -99,6 +99,32 @@ void test_board_undo_restores_previous_value(void) {
     TEST_ASSERT_FALSE(b.undo());             // niente più da annullare
 }
 
+void test_board_solved_and_complete(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    TEST_ASSERT_FALSE(b.isComplete());
+    TEST_ASSERT_FALSE(b.isSolved());
+
+    // Riempi tutte le celle libere con la soluzione corretta -> vittoria.
+    for (int i = 0; i < 81; i++) if (!b.isGiven(i)) b.setValue(i, SOLUTION[i]);
+    TEST_ASSERT_TRUE(b.isComplete());
+    TEST_ASSERT_TRUE(b.isSolved());
+}
+
+void test_board_complete_but_wrong_is_not_solved(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    for (int i = 0; i < 81; i++) if (!b.isGiven(i)) b.setValue(i, SOLUTION[i]);
+    // Sporca una cella libera con un valore errato.
+    int freeIdx = 2; // PUZZLE[2]=0
+    uint8_t wrong = (SOLUTION[freeIdx] % 9) + 1;
+    b.setValue(freeIdx, wrong);
+    TEST_ASSERT_TRUE(b.isComplete());     // tutte piene
+    TEST_ASSERT_FALSE(b.isSolved());      // ma non corretta
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_scaffolding_builds);
@@ -108,5 +134,7 @@ int main(int, char **) {
     RUN_TEST(test_count_unique_puzzle_is_one);
     RUN_TEST(test_count_empty_grid_is_capped_at_limit);
     RUN_TEST(test_board_undo_restores_previous_value);
+    RUN_TEST(test_board_solved_and_complete);
+    RUN_TEST(test_board_complete_but_wrong_is_not_solved);
     return UNITY_END();
 }
