@@ -18,6 +18,7 @@
 #include "config.h"
 #include "storage.h"
 #include "game_session.h"
+#include "ui.h"
 
 // ---------------------------------------------------------------------------
 // IO expander - sequenza Waveshare per accendere LCD/backlight/touch
@@ -86,31 +87,10 @@ void setup() {
     // -- [3] LVGL -----------------------------------------------------------
     lvgl_port_init(panel->getLcd(), panel->getTouch());
 
-    // -- [4] Storage + smoke test motore/sessione --------------------------
+    // -- [4] Storage + UI ---------------------------------------------------
     storage::begin();
-    session.newGame(sudoku::Difficulty::Medium);
-    int givens = session.board().givenCount();
-    Serial.printf("[smoke] newGame Medium -> indizi=%d stato=%d\n",
-                  givens, (int) session.state());
-
-    // -- [5] Splash ---------------------------------------------------------
     lvgl_port_lock(-1);
-    lv_obj_t *scr = lv_scr_act();
-    lv_obj_set_style_bg_color(scr, lv_color_hex(0x0f1115), 0);
-    lv_obj_set_style_bg_opa(scr, LV_OPA_COVER, 0);
-    lv_obj_clear_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_t *title = lv_label_create(scr);
-    lv_label_set_text(title, "SUDOKU");
-    lv_obj_set_style_text_color(title, lv_color_hex(0xe8ebf0), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_48, 0);
-    lv_obj_align(title, LV_ALIGN_CENTER, 0, -30);
-
-    lv_obj_t *sub = lv_label_create(scr);
-    lv_label_set_text_fmt(sub, "v%s  -  indizi: %d", SUDOKU_FW_VERSION, givens);
-    lv_obj_set_style_text_color(sub, lv_color_hex(0x5b8cff), 0);
-    lv_obj_set_style_text_font(sub, &lv_font_montserrat_18, 0);
-    lv_obj_align(sub, LV_ALIGN_CENTER, 0, 30);
+    ui::init(&session);    // mostra il menu iniziale
     lvgl_port_unlock();
 
     Serial.println("=== setup completato ===");
