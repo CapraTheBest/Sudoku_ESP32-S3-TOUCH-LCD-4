@@ -5,6 +5,21 @@ Schemi casuali generati **on-device** a soluzione unica, cronometro con pausa,
 salvataggio della partita e tempi record — il tutto in un firmware standalone,
 senza WiFi né dipendenze cloud.
 
+## Schermate
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/menu.svg" width="230" alt="Menu"><br><sub><b>Menu</b> — scelta livello, riprendi, record</sub></td>
+    <td align="center"><img src="docs/images/game.svg" width="230" alt="Gioco"><br><sub><b>Gioco</b> — griglia 9×9, tastierino, cronometro</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/pause.svg" width="230" alt="Pausa"><br><sub><b>Pausa</b> — griglia oscurata, tempo fermo</sub></td>
+    <td align="center"><img src="docs/images/win.svg" width="230" alt="Vittoria"><br><sub><b>Vittoria</b> — tempo finale e record</sub></td>
+  </tr>
+</table>
+
+<sub>Mockup rappresentativi dell'interfaccia (tema scuro, layout C★).</sub>
+
 ---
 
 ## Caratteristiche
@@ -94,6 +109,7 @@ Serve un compilatore C++ host nel PATH (es. MinGW-w64 / `g++`).
 - `docs/superpowers/specs/` — documento di design
 - `docs/superpowers/plans/` — piani di implementazione (motore, sessione, firmware)
 - `mockups/` — mockup HTML dei layout esplorati in fase di design (layout scelto: **C★**)
+- `docs/images/` — mockup SVG delle schermate (vedi sezione *Schermate*), generati da `scripts/gen_mockups.py`
 - `scripts/sermon.py` — cattura "bounded" del monitor seriale (utile per debug)
 
 ## Licenza
