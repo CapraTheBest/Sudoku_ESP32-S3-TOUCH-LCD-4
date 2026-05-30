@@ -39,6 +39,40 @@ void generateSolution(uint8_t solution[CELLS], RandFn rnd) {
     fillGrid(solution, rnd);
 }
 
-// generatePuzzle: Task 9.
+static int targetGivens(Difficulty d) {
+    switch (d) {
+        case Difficulty::Easy:   return 44;
+        case Difficulty::Medium: return 34;
+        case Difficulty::Hard:   return 28;
+    }
+    return 34;
+}
+
+void generatePuzzle(Difficulty d, uint8_t solution[CELLS], bool given[CELLS], RandFn rnd) {
+    generateSolution(solution, rnd);
+    for (int i = 0; i < CELLS; i++) given[i] = true;
+
+    int order[CELLS];
+    for (int i = 0; i < CELLS; i++) order[i] = i;
+    for (int i = CELLS - 1; i > 0; i--) {
+        int j = (int)rnd((uint32_t)(i + 1));
+        int t = order[i]; order[i] = order[j]; order[j] = t;
+    }
+
+    int givens = CELLS;
+    int target = targetGivens(d);
+    for (int k = 0; k < CELLS && givens > target; k++) {
+        int idx = order[k];
+        if (!given[idx]) continue;
+        given[idx] = false;
+        uint8_t work[CELLS];
+        for (int i = 0; i < CELLS; i++) work[i] = given[i] ? solution[i] : 0;
+        if (countSolutions(work, 2) != 1) {
+            given[idx] = true;   // la rimozione rompe l'unicità: ripristina
+        } else {
+            givens--;
+        }
+    }
+}
 
 } // namespace sudoku

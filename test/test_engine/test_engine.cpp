@@ -188,6 +188,38 @@ void test_board_conflicts_none_on_valid_partial(void) {
     TEST_ASSERT_EQUAL_INT(0, b.conflicts(out)); // il puzzle di partenza è valido
 }
 
+// Costruisce la griglia "puzzle" (solo i given) da solution+given.
+static void puzzleFrom(const uint8_t sol[81], const bool given[81], uint8_t out[81]) {
+    for (int i = 0; i < 81; i++) out[i] = given[i] ? sol[i] : 0;
+}
+
+void test_generate_puzzle_has_unique_solution(void) {
+    g_seed = 4242u;
+    uint8_t sol[81]; bool given[81];
+    sudoku::generatePuzzle(sudoku::Difficulty::Medium, sol, given, testRand);
+    TEST_ASSERT_TRUE(isValidFullGrid(sol));
+    uint8_t puzzle[81]; puzzleFrom(sol, given, puzzle);
+    TEST_ASSERT_EQUAL_INT(1, sudoku::countSolutions(puzzle, 2));
+}
+
+void test_generate_puzzle_givens_within_band(void) {
+    g_seed = 7u;
+    uint8_t sol[81]; bool given[81];
+    auto countGivens = [&]() { int n = 0; for (int i = 0; i < 81; i++) if (given[i]) n++; return n; };
+
+    sudoku::generatePuzzle(sudoku::Difficulty::Easy, sol, given, testRand);
+    int easy = countGivens();
+    TEST_ASSERT_TRUE(easy >= 40 && easy <= 50);
+
+    sudoku::generatePuzzle(sudoku::Difficulty::Medium, sol, given, testRand);
+    int medium = countGivens();
+    TEST_ASSERT_TRUE(medium >= 32 && medium <= 45);
+
+    sudoku::generatePuzzle(sudoku::Difficulty::Hard, sol, given, testRand);
+    int hard = countGivens();
+    TEST_ASSERT_TRUE(hard >= 26 && hard <= 42);
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_scaffolding_builds);
@@ -203,5 +235,7 @@ int main(int, char **) {
     RUN_TEST(test_board_conflicts_none_on_valid_partial);
     RUN_TEST(test_generate_solution_is_valid_full_grid);
     RUN_TEST(test_generate_solution_varies_with_seed);
+    RUN_TEST(test_generate_puzzle_has_unique_solution);
+    RUN_TEST(test_generate_puzzle_givens_within_band);
     return UNITY_END();
 }
