@@ -5,8 +5,6 @@ Schemi casuali generati **on-device** a soluzione unica, cronometro con pausa,
 salvataggio della partita e tempi record — il tutto in un firmware standalone,
 senza WiFi né dipendenze cloud.
 
-> Stesso display del progetto *Smart Home Panel*, ma progetto e repository separati.
-
 ---
 
 ## Caratteristiche
