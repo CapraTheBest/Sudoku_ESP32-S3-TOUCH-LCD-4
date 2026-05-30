@@ -172,6 +172,47 @@ void test_restore_rejects_invalid_snapshot(void) {
     TEST_ASSERT_EQUAL(sudoku::GameState::Menu, g.state());
 }
 
+void test_input_ignored_after_won(void) {
+    sudoku::GameSession g(testRand, testClock);
+    g.newGame(sudoku::Difficulty::Easy);
+    for (int i = 0; i < sudoku::CELLS; i++) {
+        if (!g.board().isGiven(i)) { g.selectCell(i); g.enterValue(g.board().solutionAt(i)); }
+    }
+    TEST_ASSERT_EQUAL(sudoku::GameState::Won, g.state());
+    // Dopo la vittoria ogni input e' ignorato: selectCell non cambia la selezione,
+    // enterValue/undo non toccano la board, lo stato resta Won.
+    int before = g.selectedCell();
+    g.selectCell(0);
+    TEST_ASSERT_EQUAL_INT(before, g.selectedCell());   // selectCell ignorato (non Playing)
+    g.enterValue(1);
+    g.undo();
+    TEST_ASSERT_EQUAL(sudoku::GameState::Won, g.state());
+}
+
+void test_selectcell_range_and_deselect(void) {
+    sudoku::GameSession g(testRand, testClock);
+    g.newGame(sudoku::Difficulty::Easy);
+    int free = firstFreeCell(g.board());
+    g.selectCell(free);
+    g.selectCell(999);                              // fuori range: selezione invariata
+    TEST_ASSERT_EQUAL_INT(free, g.selectedCell());
+    g.selectCell(-5);                               // < -1: invariata
+    TEST_ASSERT_EQUAL_INT(free, g.selectedCell());
+    g.selectCell(-1);                               // -1: deseleziona
+    TEST_ASSERT_EQUAL_INT(-1, g.selectedCell());
+}
+
+void test_snapshot_in_menu_is_invalid(void) {
+    sudoku::GameSession g(testRand, testClock);
+    TEST_ASSERT_FALSE(g.snapshot().valid);          // Menu: niente da salvare
+    g.newGame(sudoku::Difficulty::Easy);
+    for (int i = 0; i < sudoku::CELLS; i++) {
+        if (!g.board().isGiven(i)) { g.selectCell(i); g.enterValue(g.board().solutionAt(i)); }
+    }
+    TEST_ASSERT_EQUAL(sudoku::GameState::Won, g.state());
+    TEST_ASSERT_FALSE(g.snapshot().valid);          // Won: partita finita, non salvabile
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_newgame_enters_playing_with_valid_board);
@@ -185,5 +226,8 @@ int main(int, char **) {
     RUN_TEST(test_completing_wrong_stays_playing);
     RUN_TEST(test_snapshot_restore_roundtrip);
     RUN_TEST(test_restore_rejects_invalid_snapshot);
+    RUN_TEST(test_input_ignored_after_won);
+    RUN_TEST(test_selectcell_range_and_deselect);
+    RUN_TEST(test_snapshot_in_menu_is_invalid);
     return UNITY_END();
 }

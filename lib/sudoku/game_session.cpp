@@ -80,6 +80,9 @@ GameSession::Snapshot GameSession::snapshot() const {
 bool GameSession::restore(const Snapshot &s) {
     if (!s.valid) return false;
     board_.reset(s.solution, s.given);
+    // Nota: i valori utente vengono riapplicati con setValue, quindi finiscono
+    // nello stack di undo della board. Dopo il restore si e' in Paused e undo()
+    // e' attivo solo in Playing, quindi non sorprende l'utente prima del resume.
     for (int i = 0; i < CELLS; i++)
         if (!s.given[i] && s.value[i] != 0) board_.setValue(i, s.value[i]);
     diff_     = (Difficulty) s.difficulty;

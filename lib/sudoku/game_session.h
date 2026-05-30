@@ -41,6 +41,11 @@ public:
         uint8_t  difficulty;
         bool     valid;                // true solo se Playing/Paused
     };
+    // NB: `valid` e' un flag del PRODUTTORE ("c'era una partita da salvare"),
+    // NON un controllo di integrita' del contenuto. Il firmware che
+    // deserializza uno Snapshot da NVS (Piano C) deve validare il payload
+    // (cifre 1..9, given coerenti, difficulty in range) prima di fidarsi:
+    // restore() non e' un confine di sicurezza.
     Snapshot snapshot() const;
     bool     restore(const Snapshot& s);  // -> Paused; false se snapshot non valido
 
