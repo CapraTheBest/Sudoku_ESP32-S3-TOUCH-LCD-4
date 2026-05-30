@@ -135,6 +135,43 @@ void test_completing_wrong_stays_playing(void) {
     TEST_ASSERT_EQUAL(sudoku::GameState::Playing, g.state()); // piena ma errata
 }
 
+void test_snapshot_restore_roundtrip(void) {
+    sudoku::GameSession g(testRand, testClock);
+    s_now = 0;
+    g.newGame(sudoku::Difficulty::Medium);
+    int free = firstFreeCell(g.board());
+    g.selectCell(free);
+    g.enterValue(g.board().solutionAt(free));
+    s_now = 3000;
+    g.pause();   // elapsed = 3000
+
+    sudoku::GameSession::Snapshot snap = g.snapshot();
+    TEST_ASSERT_TRUE(snap.valid);
+    TEST_ASSERT_EQUAL_UINT32(3000, snap.elapsedMs);
+
+    // Ripristina in una nuova sessione.
+    sudoku::GameSession g2(testRand, testClock);
+    s_now = 50000;
+    TEST_ASSERT_TRUE(g2.restore(snap));
+    TEST_ASSERT_EQUAL(sudoku::GameState::Paused, g2.state());
+    TEST_ASSERT_EQUAL(sudoku::Difficulty::Medium, g2.difficulty());
+    TEST_ASSERT_EQUAL_UINT32(3000, g2.elapsedMs());        // congelato (Paused)
+    TEST_ASSERT_EQUAL_UINT8(g.board().value(free), g2.board().value(free));
+    TEST_ASSERT_EQUAL_INT(g.board().givenCount(), g2.board().givenCount());
+    // riprendendo, il tempo riparte da dov'era
+    g2.resume();
+    s_now = 50500;
+    TEST_ASSERT_EQUAL_UINT32(3500, g2.elapsedMs());
+}
+
+void test_restore_rejects_invalid_snapshot(void) {
+    sudoku::GameSession g(testRand, testClock);
+    sudoku::GameSession::Snapshot snap{};   // valid = false
+    snap.valid = false;
+    TEST_ASSERT_FALSE(g.restore(snap));
+    TEST_ASSERT_EQUAL(sudoku::GameState::Menu, g.state());
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_newgame_enters_playing_with_valid_board);
@@ -146,5 +183,7 @@ int main(int, char **) {
     RUN_TEST(test_undo_reverts_last_move);
     RUN_TEST(test_completing_correctly_wins_and_freezes_timer);
     RUN_TEST(test_completing_wrong_stays_playing);
+    RUN_TEST(test_snapshot_restore_roundtrip);
+    RUN_TEST(test_restore_rejects_invalid_snapshot);
     return UNITY_END();
 }

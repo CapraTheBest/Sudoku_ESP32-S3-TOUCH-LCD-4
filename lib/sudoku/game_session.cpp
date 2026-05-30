@@ -64,6 +64,29 @@ void GameSession::undo() {
     if (state_ != GameState::Playing) return;
     board_.undo();
 }
-// snapshot/restore: Task 4.
+GameSession::Snapshot GameSession::snapshot() const {
+    Snapshot s;
+    for (int i = 0; i < CELLS; i++) {
+        s.solution[i] = board_.solutionAt(i);
+        s.value[i]    = board_.value(i);
+        s.given[i]    = board_.isGiven(i);
+    }
+    s.elapsedMs   = elapsedMs();
+    s.difficulty  = (uint8_t) diff_;
+    s.valid       = (state_ == GameState::Playing || state_ == GameState::Paused);
+    return s;
+}
+
+bool GameSession::restore(const Snapshot &s) {
+    if (!s.valid) return false;
+    board_.reset(s.solution, s.given);
+    for (int i = 0; i < CELLS; i++)
+        if (!s.given[i] && s.value[i] != 0) board_.setValue(i, s.value[i]);
+    diff_     = (Difficulty) s.difficulty;
+    accumMs_  = s.elapsedMs;
+    selected_ = -1;
+    state_    = GameState::Paused;
+    return true;
+}
 
 } // namespace sudoku
