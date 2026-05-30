@@ -15,11 +15,14 @@ void Board::reset(const uint8_t solution[CELLS], const bool given[CELLS]) {
     history_.clear();
 }
 
-uint8_t Board::value(int idx) const      { return value_[idx]; }
-uint8_t Board::solutionAt(int idx) const { return solution_[idx]; }
-bool    Board::isGiven(int idx) const    { return given_[idx]; }
+static inline bool inRange(int idx) { return idx >= 0 && idx < CELLS; }
+
+uint8_t Board::value(int idx) const      { return inRange(idx) ? value_[idx]    : 0; }
+uint8_t Board::solutionAt(int idx) const { return inRange(idx) ? solution_[idx] : 0; }
+bool    Board::isGiven(int idx) const    { return inRange(idx) ? given_[idx]    : false; }
 
 bool Board::setValue(int idx, uint8_t val) {
+    if (!inRange(idx)) return false;
     if (given_[idx]) return false;
     if (val > 9) return false;
     history_.push_back({idx, value_[idx]});

@@ -220,11 +220,26 @@ void test_generate_puzzle_givens_within_band(void) {
     TEST_ASSERT_TRUE(hard >= 26 && hard <= 42);
 }
 
+void test_board_rejects_out_of_range_index(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    // setValue fuori range: no-op, ritorna false (non deve scrivere oltre l'array)
+    TEST_ASSERT_FALSE(b.setValue(-1, 5));
+    TEST_ASSERT_FALSE(b.setValue(81, 5));
+    // accessor di sola lettura: valori di default sicuri fuori range
+    TEST_ASSERT_EQUAL_UINT8(0, b.value(-1));
+    TEST_ASSERT_EQUAL_UINT8(0, b.value(81));
+    TEST_ASSERT_FALSE(b.isGiven(81));
+    TEST_ASSERT_EQUAL_UINT8(0, b.solutionAt(81));
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_scaffolding_builds);
     RUN_TEST(test_board_reset_sets_given_values);
     RUN_TEST(test_board_setvalue_respects_given);
+    RUN_TEST(test_board_rejects_out_of_range_index);
     RUN_TEST(test_solve_fills_known_puzzle);
     RUN_TEST(test_count_unique_puzzle_is_one);
     RUN_TEST(test_count_empty_grid_is_capped_at_limit);
