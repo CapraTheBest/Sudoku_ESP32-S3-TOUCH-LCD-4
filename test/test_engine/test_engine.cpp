@@ -40,9 +40,21 @@ void test_solve_fills_known_puzzle(void) {
     TEST_ASSERT_EQUAL_UINT8_ARRAY(SOLUTION, g, 81);
 }
 
+void test_count_unique_puzzle_is_one(void) {
+    TEST_ASSERT_EQUAL_INT(1, sudoku::countSolutions(PUZZLE, 2));
+}
+
+void test_count_empty_grid_is_capped_at_limit(void) {
+    uint8_t empty[81] = {0};
+    // Una griglia vuota ha moltissime soluzioni: l'early-exit deve fermarsi a 2.
+    TEST_ASSERT_EQUAL_INT(2, sudoku::countSolutions(empty, 2));
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_scaffolding_builds);
     RUN_TEST(test_solve_fills_known_puzzle);
+    RUN_TEST(test_count_unique_puzzle_is_one);
+    RUN_TEST(test_count_empty_grid_is_capped_at_limit);
     return UNITY_END();
 }

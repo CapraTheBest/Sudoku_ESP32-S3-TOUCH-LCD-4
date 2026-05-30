@@ -33,6 +33,25 @@ bool solve(uint8_t g[81]) {
     return false;
 }
 
-// countSolutions definita nel Task 3.
+static void countRec(uint8_t g[81], int limit, int &count) {
+    if (count >= limit) return;
+    int idx = firstEmpty(g);
+    if (idx < 0) { count++; return; }
+    for (uint8_t v = 1; v <= 9 && count < limit; v++) {
+        if (canPlace(g, idx, v)) {
+            g[idx] = v;
+            countRec(g, limit, count);
+            g[idx] = 0;
+        }
+    }
+}
+
+int countSolutions(const uint8_t grid[81], int limit) {
+    uint8_t g[81];
+    for (int i = 0; i < 81; i++) g[i] = grid[i];
+    int count = 0;
+    countRec(g, limit, count);
+    return count;
+}
 
 } // namespace sudoku
