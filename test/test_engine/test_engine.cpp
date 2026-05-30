@@ -2,6 +2,47 @@
 #include "sudoku_types.h"
 #include "sudoku_solver.h"
 #include "sudoku_board.h"
+#include "sudoku_generator.h"
+
+// LCG deterministico per test riproducibili.
+static uint32_t g_seed = 12345u;
+static uint32_t testRand(uint32_t maxExclusive) {
+    g_seed = g_seed * 1664525u + 1013904223u;
+    return (g_seed >> 8) % maxExclusive;
+}
+
+// Verifica che una griglia piena sia un Sudoku valido.
+static bool isValidFullGrid(const uint8_t g[81]) {
+    for (int i = 0; i < 81; i++) if (g[i] < 1 || g[i] > 9) return false;
+    for (int u = 0; u < 9; u++) {
+        bool row[10] = {false}, col[10] = {false}, box[10] = {false};
+        for (int k = 0; k < 9; k++) {
+            uint8_t rv = g[u * 9 + k];
+            uint8_t cv = g[k * 9 + u];
+            int br = (u / 3) * 3, bc = (u % 3) * 3;
+            uint8_t bv = g[(br + k / 3) * 9 + (bc + k % 3)];
+            if (row[rv] || col[cv] || box[bv]) return false;
+            row[rv] = col[cv] = box[bv] = true;
+        }
+    }
+    return true;
+}
+
+void test_generate_solution_is_valid_full_grid(void) {
+    g_seed = 999u;
+    uint8_t sol[81];
+    sudoku::generateSolution(sol, testRand);
+    TEST_ASSERT_TRUE(isValidFullGrid(sol));
+}
+
+void test_generate_solution_varies_with_seed(void) {
+    uint8_t a[81], b[81];
+    g_seed = 1u; sudoku::generateSolution(a, testRand);
+    g_seed = 2u; sudoku::generateSolution(b, testRand);
+    bool different = false;
+    for (int i = 0; i < 81; i++) if (a[i] != b[i]) { different = true; break; }
+    TEST_ASSERT_TRUE(different);
+}
 
 void setUp(void) {}
 void tearDown(void) {}
@@ -160,5 +201,7 @@ int main(int, char **) {
     RUN_TEST(test_board_complete_but_wrong_is_not_solved);
     RUN_TEST(test_board_conflicts_detects_row_duplicate);
     RUN_TEST(test_board_conflicts_none_on_valid_partial);
+    RUN_TEST(test_generate_solution_is_valid_full_grid);
+    RUN_TEST(test_generate_solution_varies_with_seed);
     return UNITY_END();
 }
