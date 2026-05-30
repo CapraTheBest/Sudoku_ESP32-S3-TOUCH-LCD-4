@@ -83,6 +83,22 @@ void test_count_empty_grid_is_capped_at_limit(void) {
     TEST_ASSERT_EQUAL_INT(2, sudoku::countSolutions(empty, 2));
 }
 
+void test_board_undo_restores_previous_value(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    TEST_ASSERT_FALSE(b.canUndo());          // niente da annullare all'inizio
+    b.setValue(2, 4);
+    b.setValue(2, 7);
+    TEST_ASSERT_TRUE(b.canUndo());
+    TEST_ASSERT_TRUE(b.undo());              // torna a 4
+    TEST_ASSERT_EQUAL_UINT8(4, b.value(2));
+    TEST_ASSERT_TRUE(b.undo());              // torna a 0
+    TEST_ASSERT_EQUAL_UINT8(0, b.value(2));
+    TEST_ASSERT_FALSE(b.canUndo());
+    TEST_ASSERT_FALSE(b.undo());             // niente più da annullare
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_scaffolding_builds);
@@ -91,5 +107,6 @@ int main(int, char **) {
     RUN_TEST(test_solve_fills_known_puzzle);
     RUN_TEST(test_count_unique_puzzle_is_one);
     RUN_TEST(test_count_empty_grid_is_capped_at_limit);
+    RUN_TEST(test_board_undo_restores_previous_value);
     return UNITY_END();
 }

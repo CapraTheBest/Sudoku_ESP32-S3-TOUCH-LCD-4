@@ -27,7 +27,15 @@ bool Board::setValue(int idx, uint8_t val) {
     return true;
 }
 
-// canUndo/undo: Task 5.
+bool Board::canUndo() const { return !history_.empty(); }
+
+bool Board::undo() {
+    if (history_.empty()) return false;
+    Move m = history_.back();
+    history_.pop_back();
+    value_[m.idx] = m.oldVal;
+    return true;
+}
 // isComplete/isSolved: Task 6.
 // conflicts: Task 7.
 
