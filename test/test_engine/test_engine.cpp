@@ -125,6 +125,28 @@ void test_board_complete_but_wrong_is_not_solved(void) {
     TEST_ASSERT_FALSE(b.isSolved());      // ma non corretta
 }
 
+void test_board_conflicts_detects_row_duplicate(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    // PUZZLE riga 0: 5,3,_,_,7,_,... -> metti un altro 5 nella cella libera idx 2.
+    b.setValue(2, 5);
+    bool out[81];
+    int n = b.conflicts(out);
+    TEST_ASSERT_TRUE(n >= 2);     // almeno la coppia in conflitto
+    TEST_ASSERT_TRUE(out[0]);     // il 5 dato in (0,0)
+    TEST_ASSERT_TRUE(out[2]);     // il 5 inserito in (0,2)
+    TEST_ASSERT_FALSE(out[1]);    // il 3 non è in conflitto
+}
+
+void test_board_conflicts_none_on_valid_partial(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+    bool out[81];
+    TEST_ASSERT_EQUAL_INT(0, b.conflicts(out)); // il puzzle di partenza è valido
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_scaffolding_builds);
@@ -136,5 +158,7 @@ int main(int, char **) {
     RUN_TEST(test_board_undo_restores_previous_value);
     RUN_TEST(test_board_solved_and_complete);
     RUN_TEST(test_board_complete_but_wrong_is_not_solved);
+    RUN_TEST(test_board_conflicts_detects_row_duplicate);
+    RUN_TEST(test_board_conflicts_none_on_valid_partial);
     return UNITY_END();
 }

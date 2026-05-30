@@ -45,7 +45,27 @@ bool Board::isSolved() const {
     for (int i = 0; i < CELLS; i++) if (value_[i] != solution_[i]) return false;
     return true;
 }
-// conflicts: Task 7.
+int Board::conflicts(bool out[CELLS]) const {
+    for (int i = 0; i < CELLS; i++) out[i] = false;
+    for (int idx = 0; idx < CELLS; idx++) {
+        uint8_t v = value_[idx];
+        if (v == 0) continue;
+        int r = idx / 9, c = idx % 9;
+        int br = (r / 3) * 3, bc = (c / 3) * 3;
+        for (int k = 0; k < 9; k++) {
+            int rowIdx = r * 9 + k;
+            int colIdx = k * 9 + c;
+            if (rowIdx != idx && value_[rowIdx] == v) { out[idx] = true; }
+            if (colIdx != idx && value_[colIdx] == v) { out[idx] = true; }
+        }
+        for (int dr = 0; dr < 3; dr++)
+            for (int dc = 0; dc < 3; dc++) {
+                int bIdx = (br + dr) * 9 + (bc + dc);
+                if (bIdx != idx && value_[bIdx] == v) { out[idx] = true; }
+            }
+    }
+    int n = 0; for (int i = 0; i < CELLS; i++) if (out[i]) n++; return n;
+}
 
 int Board::filledCount() const {
     int n = 0; for (int i = 0; i < CELLS; i++) if (value_[i] != 0) n++; return n;
