@@ -24,8 +24,44 @@ void test_newgame_enters_playing_with_valid_board(void) {
     TEST_ASSERT_TRUE(givens >= 17 && givens <= 81);
 }
 
+void test_timer_counts_while_playing(void) {
+    sudoku::GameSession g(testRand, testClock);
+    s_now = 1000;
+    g.newGame(sudoku::Difficulty::Easy);   // runStart = 1000
+    TEST_ASSERT_EQUAL_UINT32(0, g.elapsedMs());
+    s_now = 1500;
+    TEST_ASSERT_EQUAL_UINT32(500, g.elapsedMs());
+}
+
+void test_pause_freezes_then_resume_continues(void) {
+    sudoku::GameSession g(testRand, testClock);
+    s_now = 0;
+    g.newGame(sudoku::Difficulty::Easy);
+    s_now = 2000;
+    g.pause();                              // accumula 2000, stato Paused
+    TEST_ASSERT_EQUAL(sudoku::GameState::Paused, g.state());
+    s_now = 9000;                           // tempo passa mentre in pausa
+    TEST_ASSERT_EQUAL_UINT32(2000, g.elapsedMs());  // congelato
+    g.resume();                             // runStart = 9000, Playing
+    TEST_ASSERT_EQUAL(sudoku::GameState::Playing, g.state());
+    s_now = 9500;
+    TEST_ASSERT_EQUAL_UINT32(2500, g.elapsedMs());  // 2000 + 500
+}
+
+void test_pause_resume_ignored_in_wrong_state(void) {
+    sudoku::GameSession g(testRand, testClock);
+    g.resume();                             // in Menu: no-op
+    TEST_ASSERT_EQUAL(sudoku::GameState::Menu, g.state());
+    g.newGame(sudoku::Difficulty::Easy);
+    g.resume();                             // già Playing: no-op
+    TEST_ASSERT_EQUAL(sudoku::GameState::Playing, g.state());
+}
+
 int main(int, char **) {
     UNITY_BEGIN();
     RUN_TEST(test_newgame_enters_playing_with_valid_board);
+    RUN_TEST(test_timer_counts_while_playing);
+    RUN_TEST(test_pause_freezes_then_resume_continues);
+    RUN_TEST(test_pause_resume_ignored_in_wrong_state);
     return UNITY_END();
 }

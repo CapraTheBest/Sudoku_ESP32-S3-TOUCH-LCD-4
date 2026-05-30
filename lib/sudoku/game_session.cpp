@@ -24,7 +24,23 @@ void GameSession::newGame(Difficulty d) {
     state_ = GameState::Playing;
 }
 
-// elapsedMs/pause/resume: Task 2.
+uint32_t GameSession::elapsedMs() const {
+    uint32_t e = accumMs_;
+    if (state_ == GameState::Playing) e += clock_() - runStart_;
+    return e;
+}
+
+void GameSession::pause() {
+    if (state_ != GameState::Playing) return;
+    accumMs_ += clock_() - runStart_;
+    state_ = GameState::Paused;
+}
+
+void GameSession::resume() {
+    if (state_ != GameState::Paused) return;
+    runStart_ = clock_();
+    state_ = GameState::Playing;
+}
 // selectCell/enterValue/eraseSelected/undo: Task 3.
 // snapshot/restore: Task 4.
 
