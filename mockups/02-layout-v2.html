@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Sudoku — C popup vs C+tastierino fisso</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --ink:#e8ebf0; --muted:#8b93a3;
+    --cell:#222732; --given:#e8ebf0; --user:#6db0ff;
+    --accent:#5b8cff; --accent2:#23304d; --thick:#5a6f9a;
+  }
+  *{box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{margin:0;background:#080a0d;color:var(--ink);padding:28px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 24px;font-size:14px}
+  .row{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .tag{font-size:13px;color:var(--muted);text-align:center;max-width:480px;line-height:1.5}
+  .tag b{color:var(--ink)}
+  .letter{display:inline-block;width:26px;height:26px;line-height:26px;border-radius:50%;
+          background:var(--accent);color:#fff;font-weight:700;text-align:center;margin-right:6px}
+  .warn{color:#ffb454}.ok{color:#7fe0a0}
+
+  .dev{width:480px;height:480px;background:var(--bg);border-radius:22px;
+       border:2px solid #2a2f3a;box-shadow:0 12px 40px rgba(0,0,0,.5);overflow:hidden;
+       display:flex;flex-direction:column}
+  .topbar{height:46px;display:flex;align-items:center;justify-content:space-between;
+          padding:0 16px;background:var(--panel);border-bottom:1px solid #262b35}
+  .timer{font-variant-numeric:tabular-nums;font-size:20px;font-weight:600;letter-spacing:1px}
+  .timer .lab{font-size:10px;color:var(--muted);font-weight:400;display:block;letter-spacing:2px}
+  .ctrls{display:flex;gap:8px}
+  .btn.icon{width:34px;height:32px;background:var(--accent2);color:var(--ink);border-radius:9px;
+            display:flex;align-items:center;justify-content:center;font-size:16px}
+
+  .grid{display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);
+        gap:1px;background:#384055;border:2px solid var(--thick)}
+  .cell{background:var(--cell);display:flex;align-items:center;justify-content:center;
+        font-size:20px;color:var(--user)}
+  .cell.given{color:var(--given);font-weight:600}
+  .cell.sel{background:var(--accent);color:#fff}
+  .cell.peer{background:#2a3550}
+  .cell.r3{border-bottom:2px solid var(--thick)}
+  .cell.c3{border-right:2px solid var(--thick)}
+
+  .num{background:#202634;border-radius:10px;display:flex;align-items:center;justify-content:center;
+       font-size:22px;font-weight:600;color:var(--ink)}
+  .num.fn{font-size:14px;color:var(--muted)}
+
+  /* C popup */
+  .cwrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:8px}
+  .popup{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+         background:var(--panel);border:1px solid #313847;border-radius:14px;padding:10px;
+         display:grid;grid-template-columns:repeat(5,44px);grid-auto-rows:44px;gap:7px;
+         box-shadow:0 8px 30px rgba(0,0,0,.6)}
+  .occ{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:262px;height:107px;
+       border:2px dashed #ffb454;border-radius:14px;pointer-events:none}
+
+  /* C hybrid fixed pad */
+  .hwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:8px}
+  .hpad{height:76px;display:grid;grid-template-columns:repeat(10,1fr);gap:7px;padding:0 10px 10px}
+</style>
+</head>
+<body>
+  <h1>Sudoku — cella attiva in basso: il popup la copre?</h1>
+  <p class="sub">In entrambi è selezionata una cella della <b>penultima riga</b> (riga 8), il caso peggiore. Grandezza reale 480×480.</p>
+
+  <div class="row">
+
+    <!-- C popup -->
+    <div class="col">
+      <div class="dev">
+        <div class="topbar">
+          <div class="timer"><span class="lab">TEMPO</span>04:12</div>
+          <div class="ctrls"><div class="btn icon">⏸</div><div class="btn icon">＋</div></div>
+        </div>
+        <div class="cwrap">
+          <div class="grid" id="gC" style="width:404px;height:404px"></div>
+          <div class="popup">
+            <div class="num">1</div><div class="num">2</div><div class="num">3</div>
+            <div class="num">4</div><div class="num">5</div><div class="num">6</div>
+            <div class="num">7</div><div class="num">8</div><div class="num">9</div>
+            <div class="num fn">⌫</div>
+          </div>
+          <div class="occ"></div>
+        </div>
+      </div>
+      <div class="tag"><span class="letter">C</span><b>Popup</b> — celle ~44px.
+        <br><span class="warn">⚠ il riquadro tratteggiato è la zona coperta dal popup: la cella attiva (in blu) ci finisce sotto.</span></div>
+    </div>
+
+    <!-- C hybrid -->
+    <div class="col">
+      <div class="dev">
+        <div class="topbar">
+          <div class="timer"><span class="lab">TEMPO</span>04:12</div>
+          <div class="ctrls"><div class="btn icon">⏸</div><div class="btn icon">＋</div></div>
+        </div>
+        <div class="hwrap"><div class="grid" id="gH" style="width:360px;height:360px"></div></div>
+        <div class="hpad">
+          <div class="num">1</div><div class="num">2</div><div class="num">3</div><div class="num">4</div>
+          <div class="num">5</div><div class="num">6</div><div class="num">7</div><div class="num">8</div>
+          <div class="num">9</div><div class="num fn">⌫</div>
+        </div>
+      </div>
+      <div class="tag"><span class="letter">C★</span><b>Griglia grande + tastierino fisso</b> — celle ~40px.
+        <br><span class="ok">✓ niente occlusione: vedi sempre la cella attiva, riga, colonna e blocco mentre scegli il numero.</span></div>
+    </div>
+
+  </div>
+
+<script>
+  const P = [
+    5,3,0, 0,7,0, 0,0,0,
+    6,0,0, 1,9,5, 0,0,0,
+    0,9,8, 0,0,0, 0,6,0,
+    8,0,0, 0,6,0, 0,0,3,
+    4,0,0, 8,0,3, 0,0,1,
+    7,0,0, 0,2,0, 0,0,6,
+    0,6,0, 0,0,0, 2,8,0,
+    0,0,0, 4,1,9, 0,0,5,
+    0,0,0, 0,8,0, 0,7,9
+  ];
+  const SEL = 9*7 + 2; // row 8 (index 7), col 3 -> bottom area
+  function build(id){
+    const g=document.getElementById(id);
+    for(let i=0;i<81;i++){
+      const r=Math.floor(i/9), c=i%9;
+      const d=document.createElement('div'); d.className='cell';
+      if(P[i]){ d.textContent=P[i]; d.classList.add('given'); }
+      if(i===SEL){ d.classList.add('sel'); d.textContent=''; }
+      else if(r===7 || c===2){ d.classList.add('peer'); }
+      if(c===2||c===5) d.classList.add('c3');
+      if(r===2||r===5) d.classList.add('r3');
+      g.appendChild(d);
+    }
+  }
+  build('gC'); build('gH');
+</script>
+</body>
+</html>

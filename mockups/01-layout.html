@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Sudoku — Layout (480×480)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --ink:#e8ebf0; --muted:#8b93a3;
+    --grid-bg:#1b1f27; --cell:#222732; --cell-line:#0f1115;
+    --given:#e8ebf0; --user:#6db0ff; --accent:#5b8cff; --accent2:#23304d;
+    --thick:#5a6f9a;
+  }
+  *{box-sizing:border-box;font-family:'Segoe UI',system-ui,sans-serif}
+  body{margin:0;background:#080a0d;color:var(--ink);padding:28px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 24px;font-size:14px}
+  .row{display:flex;gap:36px;flex-wrap:wrap;align-items:flex-start}
+  .col{display:flex;flex-direction:column;align-items:center;gap:12px}
+  .tag{font-size:13px;color:var(--muted);text-align:center;max-width:480px}
+  .tag b{color:var(--ink)}
+  .letter{display:inline-block;width:26px;height:26px;line-height:26px;border-radius:50%;
+          background:var(--accent);color:#fff;font-weight:700;text-align:center;margin-right:6px}
+
+  /* device frame */
+  .dev{width:480px;height:480px;background:var(--bg);border-radius:22px;
+       border:2px solid #2a2f3a;box-shadow:0 12px 40px rgba(0,0,0,.5);overflow:hidden;
+       display:flex;flex-direction:column}
+
+  /* top bar */
+  .topbar{height:54px;display:flex;align-items:center;justify-content:space-between;
+          padding:0 16px;background:var(--panel);border-bottom:1px solid #262b35}
+  .timer{font-variant-numeric:tabular-nums;font-size:24px;font-weight:600;letter-spacing:1px}
+  .timer .lab{font-size:11px;color:var(--muted);font-weight:400;display:block;letter-spacing:2px}
+  .ctrls{display:flex;gap:8px}
+  .btn{background:var(--accent2);color:var(--ink);border-radius:10px;padding:8px 12px;
+       font-size:13px;display:flex;align-items:center;gap:6px;font-weight:600}
+  .btn.icon{width:40px;justify-content:center;padding:0;height:40px;font-size:18px}
+
+  /* sudoku grid */
+  .grid{display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);
+        gap:1px;background:#384055}
+  .gwrap{padding:10px;display:flex;align-items:center;justify-content:center}
+  .cell{background:var(--cell);display:flex;align-items:center;justify-content:center;
+        font-size:20px;color:var(--user)}
+  .cell.given{color:var(--given);font-weight:600}
+  .cell.sel{background:var(--accent);color:#fff}
+  .cell.peer{background:#2a3550}
+  /* thick 3x3 separators via borders on the wrapper grid */
+  .grid{border:2px solid var(--thick)}
+  .cell.r3{border-bottom:2px solid var(--thick)}
+  .cell.c3{border-right:2px solid var(--thick)}
+
+  /* numpad */
+  .pad{display:grid;gap:8px;padding:12px}
+  .pad.rowpad{grid-template-columns:repeat(5,1fr)}
+  .num{background:#202634;border-radius:10px;display:flex;align-items:center;justify-content:center;
+       font-size:22px;font-weight:600;color:var(--ink);height:100%}
+  .num.act{background:var(--accent);color:#fff}
+  .num.fn{font-size:13px;color:var(--muted);font-weight:600}
+
+  /* layout B side pad */
+  .bbody{display:flex;flex:1;min-height:0}
+  .bgrid{flex:1;display:flex;align-items:center;justify-content:center;padding:10px}
+  .bside{width:96px;background:var(--panel);border-left:1px solid #262b35;
+         display:flex;flex-direction:column;padding:10px;gap:7px}
+  .bside .num{font-size:18px}
+  .bnums{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+
+  /* layout C popup */
+  .cwrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;padding:8px}
+  .popup{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+         background:var(--panel);border:1px solid #313847;border-radius:14px;padding:10px;
+         display:grid;grid-template-columns:repeat(5,44px);gap:7px;box-shadow:0 8px 30px rgba(0,0,0,.6)}
+  .popup .num{height:44px}
+</style>
+</head>
+<body>
+  <h1>Sudoku — quale layout sullo schermo 480×480?</h1>
+  <p class="sub">Tre disposizioni di griglia 9×9, timer, pausa e inserimento numeri. I riquadri sono a grandezza reale (480×480 px = il display).</p>
+
+  <div class="row">
+
+    <!-- ========== A ========== -->
+    <div class="col">
+      <div class="dev">
+        <div class="topbar">
+          <div class="timer"><span class="lab">TEMPO</span>04:12</div>
+          <div class="ctrls">
+            <div class="btn icon">⏸</div>
+            <div class="btn">＋ Nuova</div>
+          </div>
+        </div>
+        <div class="gwrap" style="flex:1">
+          <div class="grid" id="gA" style="width:330px;height:330px"></div>
+        </div>
+        <div class="pad rowpad" style="height:78px">
+          <div class="num">1</div><div class="num">2</div><div class="num act">3</div>
+          <div class="num">4</div><div class="num">5</div><div class="num">6</div>
+          <div class="num">7</div><div class="num">8</div><div class="num">9</div>
+          <div class="num fn">⌫</div>
+        </div>
+      </div>
+      <div class="tag"><span class="letter">A</span><b>Classico verticale</b><br>Barra in alto (tempo + pausa + nuova), griglia al centro, tastierino in basso su una riga.</div>
+    </div>
+
+    <!-- ========== B ========== -->
+    <div class="col">
+      <div class="dev">
+        <div class="topbar" style="height:46px">
+          <div class="timer" style="font-size:20px"><span class="lab">TEMPO</span>04:12</div>
+          <div class="ctrls"><div class="btn icon" style="height:32px;width:34px">⏸</div></div>
+        </div>
+        <div class="bbody">
+          <div class="bgrid"><div class="grid" id="gB" style="width:330px;height:330px"></div></div>
+          <div class="bside">
+            <div class="bnums">
+              <div class="num">1</div><div class="num">2</div><div class="num">3</div>
+              <div class="num">4</div><div class="num">5</div><div class="num act">6</div>
+              <div class="num">7</div><div class="num">8</div><div class="num">9</div>
+              <div class="num fn">⌫</div>
+            </div>
+            <div class="num fn" style="background:#202634;height:40px">＋ Nuova</div>
+          </div>
+        </div>
+      </div>
+      <div class="tag"><span class="letter">B</span><b>Tastierino laterale</b><br>Tempo+pausa in alto, griglia a sinistra, numeri in colonna a destra. Griglia un filo più grande.</div>
+    </div>
+
+    <!-- ========== C ========== -->
+    <div class="col">
+      <div class="dev">
+        <div class="topbar" style="height:46px">
+          <div class="timer" style="font-size:20px"><span class="lab">TEMPO</span>04:12</div>
+          <div class="ctrls">
+            <div class="btn icon" style="height:32px;width:34px">⏸</div>
+            <div class="btn icon" style="height:32px;width:34px">＋</div>
+          </div>
+        </div>
+        <div class="cwrap">
+          <div class="grid" id="gC" style="width:404px;height:404px"></div>
+          <div class="popup">
+            <div class="num">1</div><div class="num">2</div><div class="num">3</div>
+            <div class="num">4</div><div class="num">5</div><div class="num">6</div>
+            <div class="num">7</div><div class="num">8</div><div class="num">9</div>
+            <div class="num fn">⌫</div>
+          </div>
+        </div>
+      </div>
+      <div class="tag"><span class="letter">C</span><b>Griglia massima + popup</b><br>La griglia riempie quasi tutto; toccando una cella appare il selettore numeri in basso. Celle più grandi = più facili da toccare.</div>
+    </div>
+
+  </div>
+
+<script>
+  // sample puzzle (0 = empty)
+  const P = [
+    5,3,0, 0,7,0, 0,0,0,
+    6,0,0, 1,9,5, 0,0,0,
+    0,9,8, 0,0,0, 0,6,0,
+    8,0,0, 0,6,0, 0,0,3,
+    4,0,0, 8,0,3, 0,0,1,
+    7,0,0, 0,2,0, 0,0,6,
+    0,6,0, 0,0,0, 2,8,0,
+    0,0,0, 4,1,9, 0,0,5,
+    0,0,0, 0,8,0, 0,7,9
+  ];
+  function build(id, selIdx){
+    const g = document.getElementById(id);
+    for(let i=0;i<81;i++){
+      const r=Math.floor(i/9), c=i%9;
+      const d=document.createElement('div');
+      d.className='cell';
+      if(P[i]){ d.textContent=P[i]; d.classList.add('given'); }
+      else if(i===selIdx){ d.textContent='3'; }
+      if(i===selIdx) d.classList.add('sel');
+      if(c===2||c===5) d.classList.add('c3');
+      if(r===2||r===5) d.classList.add('r3');
+      g.appendChild(d);
+    }
+  }
+  build('gA',20); build('gB',20); build('gC',20);
+</script>
+</body>
+</html>
