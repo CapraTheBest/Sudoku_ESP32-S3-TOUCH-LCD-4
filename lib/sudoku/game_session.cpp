@@ -41,7 +41,29 @@ void GameSession::resume() {
     runStart_ = clock_();
     state_ = GameState::Playing;
 }
-// selectCell/enterValue/eraseSelected/undo: Task 3.
+void GameSession::selectCell(int idx) {
+    if (state_ != GameState::Playing) return;
+    if (idx < -1 || idx >= CELLS) return;
+    selected_ = idx;
+}
+
+void GameSession::enterValue(uint8_t v) {
+    if (state_ != GameState::Playing) return;
+    if (selected_ < 0) return;
+    if (v > 9) return;
+    if (!board_.setValue(selected_, v)) return;   // cella data o valore non valido
+    if (board_.isComplete() && board_.isSolved()) {
+        accumMs_ += clock_() - runStart_;          // congela il cronometro
+        state_ = GameState::Won;
+    }
+}
+
+void GameSession::eraseSelected() { enterValue(0); }
+
+void GameSession::undo() {
+    if (state_ != GameState::Playing) return;
+    board_.undo();
+}
 // snapshot/restore: Task 4.
 
 } // namespace sudoku
