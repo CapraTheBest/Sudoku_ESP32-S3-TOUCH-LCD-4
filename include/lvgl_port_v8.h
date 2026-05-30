@@ -48,7 +48,11 @@
  */
 #define LVGL_PORT_TASK_MAX_DELAY_MS             (500)       // The maximum delay of the LVGL timer task, in milliseconds
 #define LVGL_PORT_TASK_MIN_DELAY_MS             (2)         // The minimum delay of the LVGL timer task, in milliseconds
-#define LVGL_PORT_TASK_STACK_SIZE               (6 * 1024)  // The stack size of the LVGL timer task, in bytes
+#define LVGL_PORT_TASK_STACK_SIZE               (16 * 1024) // The stack size of the LVGL timer task, in bytes
+                                                            // Sudoku: alzato da 6K a 16K. La generazione dello schema
+                                                            // (backtracking ricorsivo + countSolutions) e' invocata
+                                                            // dalle callback evento, che girano su questo task; con
+                                                            // 6K andava in stack overflow (canary watchpoint lvgl).
 #define LVGL_PORT_TASK_PRIORITY                 (2)         // The priority of the LVGL timer task
 #define LVGL_PORT_TASK_CORE                     (ARDUINO_RUNNING_CORE)
                                                             // The core of the LVGL timer task, `-1` means the don't specify the core

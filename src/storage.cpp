@@ -45,6 +45,7 @@ void saveGame(const Snapshot &s) {
 }
 
 bool loadGame(Snapshot &out) {
+    if (!prefs.isKey(KEY_GAME)) return false;
     if (prefs.getBytesLength(KEY_GAME) != sizeof(Snapshot)) return false;
     size_t n = prefs.getBytes(KEY_GAME, &out, sizeof(Snapshot));
     if (n != sizeof(Snapshot)) return false;
@@ -52,7 +53,7 @@ bool loadGame(Snapshot &out) {
 }
 
 void clearSavedGame() {
-    prefs.remove(KEY_GAME);
+    if (prefs.isKey(KEY_GAME)) prefs.remove(KEY_GAME);
 }
 
 // --- Record ----------------------------------------------------------------
