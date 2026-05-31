@@ -11,15 +11,15 @@ standalone firmware, with no WiFi and no cloud dependencies.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/splash.svg" width="230" alt="Splash"><br><sub><b>Splash</b> — kanji intro &amp; language pick (EN/IT)</sub></td>
-    <td align="center"><img src="docs/images/menu.svg" width="230" alt="Menu"><br><sub><b>Menu</b> — difficulty, resume, best times</sub></td>
+    <td align="center"><img src="docs/images/en/splash.svg" width="230" alt="Splash"><br><sub><b>Splash</b> — kanji intro &amp; language pick (EN/IT)</sub></td>
+    <td align="center"><img src="docs/images/en/menu.svg" width="230" alt="Menu"><br><sub><b>Menu</b> — difficulty, resume, best times</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/images/game.svg" width="230" alt="Game"><br><sub><b>Game</b> — 9×9 grid, keypad, notes, timer</sub></td>
-    <td align="center"><img src="docs/images/pause.svg" width="230" alt="Pause"><br><sub><b>Pause</b> — grid dimmed, clock stopped</sub></td>
+    <td align="center"><img src="docs/images/en/game.svg" width="230" alt="Game"><br><sub><b>Game</b> — 9×9 grid, keypad, notes, timer</sub></td>
+    <td align="center"><img src="docs/images/en/pause.svg" width="230" alt="Pause"><br><sub><b>Pause</b> — grid dimmed, clock stopped</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/images/win.svg" width="230" alt="Win"><br><sub><b>Win</b> — final time and record</sub></td>
+    <td align="center"><img src="docs/images/en/win.svg" width="230" alt="Win"><br><sub><b>Win</b> — final time and record</sub></td>
     <td></td>
   </tr>
 </table>
@@ -141,11 +141,12 @@ are produced by a small Python script that mirrors the real palette
 python scripts/gen_mockups.py
 ```
 
-This rewrites `docs/images/{splash,menu,game,pause,win}.svg` in place. When the UI
-changes (colors, layout, labels), update the palette/layout constants at the top of
-[`scripts/gen_mockups.py`](scripts/gen_mockups.py) and re-run it. (For true device
-captures, take a screenshot from the panel and drop the PNGs into `docs/images/`,
-updating the links above.)
+This rewrites both languages: `docs/images/en/{splash,menu,game,pause,win}.svg` and
+`docs/images/it/...`. The per-language strings live in the `STR` table at the top of the
+script (keep it in sync with [`src/i18n.cpp`](src/i18n.cpp)); when the UI changes (colors,
+layout, labels), update the palette/layout/string constants and re-run it. (For true
+device captures, take a screenshot from the panel and drop the PNGs into `docs/images/en/`
+and `docs/images/it/`, updating the links above.)
 
 ## License
 

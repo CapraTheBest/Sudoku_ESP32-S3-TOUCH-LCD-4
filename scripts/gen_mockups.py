@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # Generate SVG mockups (480x480) of the firmware screens, using the same
-# palette/layout as the real UI. Output goes to docs/images/.
+# palette/layout as the real UI. Output goes to docs/images/<lang>/ for each
+# UI language (en, it).
 #
 # Run:  python scripts/gen_mockups.py
-# Then the README screenshots (docs/images/*.svg) are refreshed in place.
+# Then the README screenshots (docs/images/{en,it}/*.svg) are refreshed.
 #
 # These are representative vector mockups, NOT device captures. Keep the
-# palette below in sync with include/ui_theme.h and the layout in src/ui.cpp.
+# palette below in sync with include/ui_theme.h, the layout with src/ui.cpp,
+# and the strings with src/i18n.cpp.
 import os
 
 # --- palette (from include/ui_theme.h) ---
@@ -16,8 +18,25 @@ MUTED="#8b93a3"; NOTE="#9aa3b5"; ACCENT="#5b8cff"; ACCENT2="#23304d"
 DANGER="#e5484d"; GOOD="#2ecc71"; SUN="#d83a3a"
 FONT='font-family="Segoe UI, Helvetica, Arial, sans-serif"'
 
-OUT = os.path.join(os.path.dirname(__file__), "..", "docs", "images")
-os.makedirs(OUT, exist_ok=True)
+# --- UI strings per language (mirror src/i18n.cpp) ---
+STR = {
+    "en": {
+        "easy": "Easy", "medium": "Medium", "hard": "Hard",
+        "resume": "Resume game", "best_fmt": "Best    E {} M {} H {}",
+        "paused": "Paused", "tap_resume": "tap to resume",
+        "you_won": "You won!", "new_record": "New record!", "menu": "Menu",
+        "win_line": "Medium  -  03:21",
+    },
+    "it": {
+        "easy": "Facile", "medium": "Medio", "hard": "Difficile",
+        "resume": "Riprendi partita", "best_fmt": "Record  F {} M {} D {}",
+        "paused": "In pausa", "tap_resume": "tocca per riprendere",
+        "you_won": "Hai vinto!", "new_record": "Nuovo record!", "menu": "Menu",
+        "win_line": "Medio  -  03:21",
+    },
+}
+
+ROOT = os.path.join(os.path.dirname(__file__), "..", "docs", "images")
 
 def hdr():
     return ('<svg xmlns="http://www.w3.org/2000/svg" width="480" height="480" '
@@ -37,10 +56,12 @@ def text(x,y,s,fill,size,weight="400",anchor="middle"):
 def circle(cx,cy,r,fill):
     return f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{fill}"/>\n'
 
-def save(name, body):
-    with open(os.path.join(OUT, name), "w", encoding="utf-8") as f:
+def save(lang, name, body):
+    d = os.path.join(ROOT, lang)
+    os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, name), "w", encoding="utf-8") as f:
         f.write(hdr()+body+"</svg>\n")
-    print("wrote", name)
+    print("wrote", lang + "/" + name)
 
 # --- icons (simple vector glyphs standing in for the LVGL symbols) ---
 def icon_pause(cx,cy):
@@ -80,7 +101,7 @@ def topbar(timer="04:12"):
     b+=rect(294,7,46,36,ACCENT,8)+icon_pencil(317,25)
     # pause
     b+=rect(346,7,46,36,ACCENT2,8)+icon_pause(369,25)
-    # MENU
+    # MENU (label is hardcoded in src/ui.cpp, same in both languages)
     b+=rect(398,7,74,36,ACCENT2,8)+text(435,25,"MENU",INK,16,"600")
     return b
 
@@ -123,46 +144,52 @@ def numpad():
             p+=icon_eraser(x+bw/2, y+29)
     return p
 
-# ---------- GAME ----------
-save("game.svg", topbar()+grid()+numpad())
+# ---------- per-language screens ----------
+def gen(lang):
+    s = STR[lang]
 
-# ---------- MENU ----------
-def menu():
-    m=text(240,90,"SUDOKU",INK,46,"700")
-    items=[("Easy",130),("Medium",196),("Hard",262)]
-    for label,y in items:
-        m+=rect(90,y,300,56,ACCENT2,10)+text(240,y+28,label,INK,26,"600")
-    m+=rect(90,332,300,50,ACCENT,10)+text(240,357,"Resume game",INK,22,"600")
-    m+=text(240,452,"Best    E --:--     M 03:21     H --:--",MUTED,16)
-    return m
-save("menu.svg", menu())
+    # GAME
+    save(lang, "game.svg", topbar()+grid()+numpad())
 
-# ---------- SPLASH / LANGUAGE ----------
-def splash():
-    s=circle(240,124,90,SUN)                               # rising-sun red circle
-    s+=text(240,124,"数独",INK,56,"700")                   # kanji (rendered if font present)
-    s+=text(240,256,"SUDOKU",INK,46,"700")
-    s+=rect(100,300,280,54,ACCENT2,10)+text(240,327,"English",INK,26,"600")
-    s+=rect(100,366,280,54,ACCENT2,10)+text(240,393,"Italiano",INK,26,"600")
-    return s
-save("splash.svg", splash())
+    # MENU
+    def menu():
+        m=text(240,90,"SUDOKU",INK,46,"700")
+        items=[(s["easy"],130),(s["medium"],196),(s["hard"],262)]
+        for label,y in items:
+            m+=rect(90,y,300,56,ACCENT2,10)+text(240,y+28,label,INK,26,"600")
+        m+=rect(90,332,300,50,ACCENT,10)+text(240,357,s["resume"],INK,22,"600")
+        m+=text(240,452,s["best_fmt"].format("--:--","03:21","--:--"),MUTED,16)
+        return m
+    save(lang, "menu.svg", menu())
 
-# ---------- PAUSE ----------
-def pause():
-    p=f'<g opacity="0.12">{grid(selected=None, show_user=True, show_notes=True)}</g>'
-    p+=rect(0,0,480,480,BG,22,opa=0.80)
-    p+=text(240,210,"Paused",INK,46,"700")
-    p+=text(240,270,"tap to resume",MUTED,18)
-    return p
-save("pause.svg", pause())
+    # SPLASH / LANGUAGE (the two language names are the same in both builds)
+    def splash():
+        sp=circle(240,124,90,SUN)                          # rising-sun red circle
+        sp+=text(240,124,"数独",INK,56,"700")              # kanji (if font present)
+        sp+=text(240,256,"SUDOKU",INK,46,"700")
+        sp+=rect(100,300,280,54,ACCENT2,10)+text(240,327,"English",INK,26,"600")
+        sp+=rect(100,366,280,54,ACCENT2,10)+text(240,393,"Italiano",INK,26,"600")
+        return sp
+    save(lang, "splash.svg", splash())
 
-# ---------- WIN ----------
-def win():
-    w=text(240,130,"You won!",GOOD,46,"700")
-    w+=text(240,235,"Medium  -  03:21",INK,28,"600")
-    w+=text(240,300,"New record!",GOOD,24,"600")
-    w+=rect(130,392,220,56,ACCENT,10)+text(240,420,"Menu",INK,28,"600")
-    return w
-save("win.svg", win())
+    # PAUSE
+    def pause():
+        p=f'<g opacity="0.12">{grid(selected=None, show_user=True, show_notes=True)}</g>'
+        p+=rect(0,0,480,480,BG,22,opa=0.80)
+        p+=text(240,210,s["paused"],INK,46,"700")
+        p+=text(240,270,s["tap_resume"],MUTED,18)
+        return p
+    save(lang, "pause.svg", pause())
 
+    # WIN
+    def win():
+        w=text(240,130,s["you_won"],GOOD,46,"700")
+        w+=text(240,235,s["win_line"],INK,28,"600")
+        w+=text(240,300,s["new_record"],GOOD,24,"600")
+        w+=rect(130,392,220,56,ACCENT,10)+text(240,420,s["menu"],INK,28,"600")
+        return w
+    save(lang, "win.svg", win())
+
+for lang in ("en", "it"):
+    gen(lang)
 print("done")

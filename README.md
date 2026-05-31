@@ -11,15 +11,15 @@ firmware standalone, senza WiFi né dipendenze cloud.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/splash.svg" width="230" alt="Splash"><br><sub><b>Splash</b> — intro kanji e scelta lingua (EN/IT)</sub></td>
-    <td align="center"><img src="docs/images/menu.svg" width="230" alt="Menu"><br><sub><b>Menu</b> — livello, riprendi, record</sub></td>
+    <td align="center"><img src="docs/images/it/splash.svg" width="230" alt="Splash"><br><sub><b>Splash</b> — intro kanji e scelta lingua (EN/IT)</sub></td>
+    <td align="center"><img src="docs/images/it/menu.svg" width="230" alt="Menu"><br><sub><b>Menu</b> — livello, riprendi, record</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/images/game.svg" width="230" alt="Gioco"><br><sub><b>Gioco</b> — griglia 9×9, tastierino, appunti, cronometro</sub></td>
-    <td align="center"><img src="docs/images/pause.svg" width="230" alt="Pausa"><br><sub><b>Pausa</b> — griglia oscurata, tempo fermo</sub></td>
+    <td align="center"><img src="docs/images/it/game.svg" width="230" alt="Gioco"><br><sub><b>Gioco</b> — griglia 9×9, tastierino, appunti, cronometro</sub></td>
+    <td align="center"><img src="docs/images/it/pause.svg" width="230" alt="Pausa"><br><sub><b>Pausa</b> — griglia oscurata, tempo fermo</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/images/win.svg" width="230" alt="Vittoria"><br><sub><b>Vittoria</b> — tempo finale e record</sub></td>
+    <td align="center"><img src="docs/images/it/win.svg" width="230" alt="Vittoria"><br><sub><b>Vittoria</b> — tempo finale e record</sub></td>
     <td></td>
   </tr>
 </table>
@@ -140,11 +140,12 @@ device. Sono prodotte da un piccolo script Python che rispecchia la palette real
 python scripts/gen_mockups.py
 ```
 
-Lo script riscrive `docs/images/{splash,menu,game,pause,win}.svg`. Quando la UI cambia
-(colori, layout, etichette), aggiorna le costanti di palette/layout in cima a
-[`scripts/gen_mockups.py`](scripts/gen_mockups.py) e rilancialo. (Per catture reali dal
-device, fai uno screenshot dal pannello e metti i PNG in `docs/images/`, aggiornando i
-link qui sopra.)
+Lo script riscrive entrambe le lingue: `docs/images/it/{splash,menu,game,pause,win}.svg`
+e `docs/images/en/...`. Le stringhe per lingua sono nella tabella `STR` in cima allo
+script (da tenere allineata a [`src/i18n.cpp`](src/i18n.cpp)); quando la UI cambia (colori,
+layout, etichette) aggiorna le costanti di palette/layout/stringhe e rilancialo. (Per
+catture reali dal device, fai uno screenshot dal pannello e metti i PNG in
+`docs/images/it/` e `docs/images/en/`, aggiornando i link qui sopra.)
 
 ## Licenza
 
