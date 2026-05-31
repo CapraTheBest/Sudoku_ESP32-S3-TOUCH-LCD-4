@@ -35,7 +35,7 @@ senza WiFi né dipendenze cloud.
 
 ## Hardware
 
-| | |
+| Componente | Dettaglio |
 |---|---|
 | Board | Waveshare **ESP32-S3-Touch-LCD-4** (ESP32-S3 N16R8) |
 | Display | 480×480 IPS, controller **ST7701** (bus RGB) |
@@ -106,9 +106,9 @@ Serve un compilatore C++ host nel PATH (es. MinGW-w64 / `g++`).
 
 ## Struttura del progetto
 
-- `docs/superpowers/specs/` — documento di design
-- `docs/superpowers/plans/` — piani di implementazione (motore, sessione, firmware)
-- `mockups/` — mockup HTML dei layout esplorati in fase di design (layout scelto: **C★**)
+- `docs/design/` — documento di design
+- `docs/plans/` — piani di implementazione (motore, sessione, firmware)
+- `docs/mockups/` — mockup HTML dei layout esplorati in fase di design (layout scelto: **C★**)
 - `docs/images/` — mockup SVG delle schermate (vedi sezione *Schermate*), generati da `scripts/gen_mockups.py`
 - `scripts/sermon.py` — cattura "bounded" del monitor seriale (utile per debug)
 
