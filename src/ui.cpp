@@ -19,6 +19,7 @@ static void showMenu();
 static void showGame();
 static void showPause();
 static void showWin();
+static void showRestoreDialog();
 
 // ===================== stato schermata di gioco =====================
 static lv_obj_t *g_cell[81];
@@ -26,6 +27,7 @@ static lv_obj_t *g_cellLabel[81];
 static lv_obj_t *g_numBtn[10];          // tasti tastierino 1..9 (indice = cifra)
 static lv_obj_t *g_notesBtn = nullptr;  // toggle modalita' appunti
 static bool      g_notesMode = false;   // true = i tasti scrivono appunti
+static sudoku::Difficulty g_pendingDiff = sudoku::Difficulty::Medium; // livello scelto in attesa di conferma
 static lv_obj_t *g_timerLabel = nullptr;
 static lv_timer_t *g_tick = nullptr;
 static lv_timer_t *g_flash = nullptr;
@@ -182,6 +184,7 @@ static void num_cb(lv_event_t *e) {
 
     S->enterValue((uint8_t)d);
     if (S->state() == sudoku::GameState::Won) { showWin(); return; }
+    storage::saveGame(S->snapshot());   // autosalvataggio ad ogni mossa (valori)
     refreshGame();
     // griglia piena ma non risolta -> lampeggio rosso sulle celle in conflitto
     if (S->board().isComplete()) {
@@ -209,7 +212,12 @@ static void resume_cb(lv_event_t *) {
 
 static void diff_cb(lv_event_t *e) {
     int d = (int)(intptr_t)lv_event_get_user_data(e);
-    storage::clearSavedGame();          // la partita salvata diventa obsoleta
+    // Se c'e' una partita salvata, chiedi se riprenderla o iniziarne una nuova.
+    if (storage::hasSavedGame()) {
+        g_pendingDiff = (sudoku::Difficulty) d;
+        showRestoreDialog();
+        return;
+    }
     S->newGame((sudoku::Difficulty)d);
     showGame();
 }
@@ -220,6 +228,14 @@ static void resumeSaved_cb(lv_event_t *) {
         S->resume();
         showGame();
     }
+}
+
+// "Nuova partita" dal dialogo di ripristino: scarta il salvataggio e parte
+// dal livello scelto (memorizzato in g_pendingDiff).
+static void newPending_cb(lv_event_t *) {
+    storage::clearSavedGame();
+    S->newGame(g_pendingDiff);
+    showGame();
 }
 
 static void toMenu_cb(lv_event_t *) { showMenu(); }
@@ -287,6 +303,33 @@ static void showMenu() {
     lv_obj_align(recL, LV_ALIGN_BOTTOM_MID, 0, -16);
 
     lv_scr_load_anim(scr, LV_SCR_LOAD_ANIM_FADE_IN, 150, 0, true);
+}
+
+// ===================== DIALOGO RIPRISTINO =====================
+// Mostrato quando si sceglie un livello ma esiste una partita salvata:
+// "Riprendi" la riprende, "Nuova partita" la scarta e parte dal livello scelto.
+static void showRestoreDialog() {
+    killTimers();
+    lv_obj_t *scr = lv_obj_create(nullptr);
+    plainStyle(scr, theme::bg(), 0);
+
+    lv_obj_t *t = lv_label_create(scr);
+    lv_label_set_text(t, i18n::tr(i18n::K_SAVED_FOUND));
+    lv_obj_set_style_text_color(t, theme::ink(), 0);
+    lv_obj_set_style_text_font(t, &lv_font_montserrat_28, 0);
+    lv_obj_align(t, LV_ALIGN_TOP_MID, 0, 130);
+
+    lv_obj_t *bResume = makeButton(scr, i18n::tr(i18n::K_RESUME), &lv_font_montserrat_28,
+                                   theme::accent(), resumeSaved_cb, 0);
+    lv_obj_set_size(bResume, 300, 56);
+    lv_obj_align(bResume, LV_ALIGN_CENTER, 0, 0);
+
+    lv_obj_t *bNew = makeButton(scr, i18n::tr(i18n::K_NEW_GAME), &lv_font_montserrat_28,
+                                theme::accent2(), newPending_cb, 0);
+    lv_obj_set_size(bNew, 300, 56);
+    lv_obj_align(bNew, LV_ALIGN_CENTER, 0, 76);
+
+    lv_scr_load_anim(scr, LV_SCR_LOAD_ANIM_FADE_IN, 120, 0, true);
 }
 
 // ===================== GIOCO =====================
