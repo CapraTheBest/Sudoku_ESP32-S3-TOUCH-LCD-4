@@ -1,122 +1,158 @@
 # Sudoku Panel
 
-Gioco del **Sudoku** per il pannello touch **Waveshare ESP32-S3-Touch-LCD-4** (480×480).
-Schemi casuali generati **on-device** a soluzione unica, cronometro con pausa,
-salvataggio della partita e tempi record — il tutto in un firmware standalone,
-senza WiFi né dipendenze cloud.
+**English** · [Italiano](README.it.md)
 
-## Schermate
+A **Sudoku** game for the **Waveshare ESP32-S3-Touch-LCD-4** touch panel (480×480).
+Random puzzles generated **on-device** with a guaranteed unique solution, a stopwatch
+with pause, automatic game saving, pencil-mark notes and per-level best times — all in a
+standalone firmware, with no WiFi and no cloud dependencies.
+
+## Screens
 
 <table>
   <tr>
-    <td align="center"><img src="docs/images/menu.svg" width="230" alt="Menu"><br><sub><b>Menu</b> — scelta livello, riprendi, record</sub></td>
-    <td align="center"><img src="docs/images/game.svg" width="230" alt="Gioco"><br><sub><b>Gioco</b> — griglia 9×9, tastierino, cronometro</sub></td>
+    <td align="center"><img src="docs/images/splash.svg" width="230" alt="Splash"><br><sub><b>Splash</b> — kanji intro &amp; language pick (EN/IT)</sub></td>
+    <td align="center"><img src="docs/images/menu.svg" width="230" alt="Menu"><br><sub><b>Menu</b> — difficulty, resume, best times</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/images/pause.svg" width="230" alt="Pausa"><br><sub><b>Pausa</b> — griglia oscurata, tempo fermo</sub></td>
-    <td align="center"><img src="docs/images/win.svg" width="230" alt="Vittoria"><br><sub><b>Vittoria</b> — tempo finale e record</sub></td>
+    <td align="center"><img src="docs/images/game.svg" width="230" alt="Game"><br><sub><b>Game</b> — 9×9 grid, keypad, notes, timer</sub></td>
+    <td align="center"><img src="docs/images/pause.svg" width="230" alt="Pause"><br><sub><b>Pause</b> — grid dimmed, clock stopped</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/win.svg" width="230" alt="Win"><br><sub><b>Win</b> — final time and record</sub></td>
+    <td></td>
   </tr>
 </table>
 
-<sub>Mockup rappresentativi dell'interfaccia (tema scuro, layout C★).</sub>
+<sub>Representative mockups of the interface (dark theme, layout C★). See
+<a href="#regenerating-the-screenshots">Regenerating the screenshots</a>.</sub>
 
 ---
 
-## Caratteristiche
+## Features
 
-- 🎲 **Schemi infiniti on-device** — generati a runtime con **soluzione unica garantita** (backtracking + verifica di unicità). Nessun puzzle pre-caricato, nessuna ripetizione.
-- 🎚️ **Tre livelli** — Facile / Medio / Difficile (calibrati sul numero di indizi).
-- ⏱️ **Cronometro** — conta solo il tempo di gioco; si ferma in pausa e alla vittoria.
-- ⏸️ **Pausa** — oscura la griglia e ferma il tempo ("tocca per riprendere"), così non si può sbirciare a cronometro fermo.
-- 💾 **Riprendi partita** — lo stato viene salvato in NVS: dopo uno spegnimento puoi riprendere da dove eri.
-- 🏆 **Tempi record** — miglior tempo memorizzato per ogni livello.
-- ↩️ **Annulla** e **evidenziazione** della cella selezionata (riga / colonna / blocco) e dei numeri uguali.
-- 🌙 **Tema scuro**, layout ottimizzato per il touch capacitivo (griglia massimizzata + tastierino fisso).
+- 🎲 **Infinite on-device puzzles** — generated at runtime with a **guaranteed unique solution** (backtracking + uniqueness check). No pre-loaded puzzles, no repeats.
+- 🎚️ **Three levels** — Easy / Medium / Hard (calibrated by number of clues).
+- ✏️ **Pencil marks (notes)** — a top-bar toggle switches to notes mode; tap 1–9 to add/remove small candidate digits in the selected cell, just like real Sudoku apps.
+- 🔢 **Smart keypad** — once a digit is correctly placed in all nine cells, its key greys out and stops responding.
+- ⏱️ **Stopwatch** — counts only play time; stops on pause and on win.
+- ⏸️ **Pause** — dims the grid and freezes the clock ("tap to resume"), so you can't peek with the timer stopped.
+- 💾 **Autosave & resume** — the game is saved to NVS after every move, so an unexpected power loss won't lose your progress; on next start, picking a difficulty offers to **resume** the saved game or start a **new** one.
+- 🏆 **Best times** — fastest time stored per level.
+- ↩️ **Undo** and **highlighting** of the selected cell (row / column / box) and of matching numbers, in distinct colors.
+- 🌐 **Bilingual UI (EN/IT)** — language chosen on the splash screen and persisted in NVS.
+- 🌙 **Dark theme**, layout optimised for capacitive touch (maximised grid + fixed keypad).
 
 ## Hardware
 
-| Componente | Dettaglio |
+| Component | Detail |
 |---|---|
 | Board | Waveshare **ESP32-S3-Touch-LCD-4** (ESP32-S3 N16R8) |
-| Display | 480×480 IPS, controller **ST7701** (bus RGB) |
-| Touch | **GT911** capacitivo (I²C) |
-| IO expander | **TCA9554** (reset LCD/touch, backlight) |
-| Memoria | 16 MB Flash QIO · 8 MB PSRAM OPI |
+| Display | 480×480 IPS, **ST7701** controller (RGB bus) |
+| Touch | **GT911** capacitive (I²C) |
+| IO expander | **TCA9554** (LCD/touch reset, backlight) |
+| Memory | 16 MB Flash QIO · 8 MB PSRAM OPI |
 
-## Architettura
+## Architecture
 
-Separazione netta tra **logica pura** (C++ portabile, testata su PC) e **firmware** (Arduino/LVGL):
+A clean split between **pure logic** (portable C++, tested on PC) and **firmware**
+(Arduino/LVGL):
 
 ```
-lib/sudoku/            motore + sessione (C++ puro, NIENTE Arduino/LVGL)
-  sudoku_solver        risolutore backtracking + conteggio soluzioni (unicità)
-  sudoku_generator     generazione griglia piena + scavo a soluzione unica
-  sudoku_board         stato griglia: dati iniziali, valori, undo, conflitti, vittoria
-  game_session         macchina a stati + cronometro + input + snapshot save/restore
+lib/sudoku/            engine + session (pure C++, NO Arduino/LVGL)
+  sudoku_solver        backtracking solver + solution counting (uniqueness)
+  sudoku_generator     full-grid generation + digging to a unique solution
+  sudoku_board         grid state: givens, values, notes, undo, conflicts, win
+  game_session         state machine + stopwatch + input + snapshot save/restore
 src/
-  main.cpp             bring-up hardware (IO expander, backlight, LVGL) + loop
-  ui.cpp               UI LVGL: menu, gioco, pausa, vittoria
-  storage.cpp          persistenza NVS (partita + record), con validazione del payload
-  lvgl_port_v8.cpp     porting LVGL ↔ display RGB (da Espressif/Waveshare)
-include/               header (config, tema, board ESP_Panel, lv_conf)
-test/                  test unitari Unity del motore e della sessione (ambiente nativo)
+  main.cpp             hardware bring-up (IO expander, backlight, LVGL) + loop
+  ui.cpp               LVGL UI: splash, menu, game, pause, win
+  storage.cpp          NVS persistence (game + records + language), payload-validated
+  i18n.cpp             minimal EN/IT string table
+  lvgl_port_v8.cpp     LVGL ↔ RGB display port (from Espressif/Waveshare)
+  font_eraser.c        generated LVGL font: mdi-eraser glyph
+  font_jp56.c          generated LVGL font: 数独 kanji (splash)
+include/               headers (config, theme, i18n, fonts, ESP_Panel board, lv_conf)
+test/                  Unity unit tests for engine and session (native environment)
 ```
 
-La logica di gioco non dipende dall'hardware: gira sia sul PC (per i test) sia sul device.
+The game logic does not depend on the hardware: it runs both on the PC (for tests) and
+on the device.
 
 ## Build & flash
 
-Richiede [PlatformIO](https://platformio.org/). La build del device usa il fork
-**pioarduino** (Arduino-ESP32 3.0.7 / ESP-IDF v5.1), richiesto da `ESP32_Display_Panel`.
+Requires [PlatformIO](https://platformio.org/). The device build uses the **pioarduino**
+fork (Arduino-ESP32 3.0.7 / ESP-IDF v5.1), required by `ESP32_Display_Panel`.
 
 ```bash
-# Compila il firmware
+# Build the firmware
 pio run -e esp32-s3-touch-lcd-4
 
-# Compila e flasha sul pannello (USB-C)
+# Build and flash to the panel (USB-C)
 pio run -e esp32-s3-touch-lcd-4 -t upload
 
-# Monitor seriale
+# Serial monitor
 pio device monitor -b 115200
 ```
 
-> La prima build scarica la toolchain (~200 MB) e può richiedere parecchi minuti;
-> le successive sono nell'ordine dei ~2 minuti.
+> The first build downloads the toolchain (~200 MB) and can take several minutes;
+> later builds are around ~2 minutes.
 
-## Test (su PC, senza hardware)
+## Test (on PC, no hardware)
 
-Il motore e la sessione sono coperti da test unitari **Unity** eseguibili nativamente:
+The engine and session are covered by **Unity** unit tests that run natively:
 
 ```bash
 pio test -e native
 ```
 
-Serve un compilatore C++ host nel PATH (es. MinGW-w64 / `g++`).
+You need a host C++ compiler on the PATH (e.g. MinGW-w64 / `g++`).
 
-## Comandi (sintesi)
+## Controls
 
-| Azione | Tocco |
+| Action | Touch |
 |---|---|
-| Scegliere il livello | bottoni nel menu |
-| Selezionare una cella | tocca la cella |
-| Inserire un numero | tasti `1`–`9` del tastierino |
-| Cancellare | tasto ⌫ |
-| Pausa / nuova partita | ⏸ / ＋ nella barra in alto |
-| Riprendere dopo la pausa | tocca lo schermo |
+| Choose difficulty | menu buttons |
+| Select a cell | tap the cell |
+| Enter a number | keys `1`–`9` on the keypad |
+| Erase | eraser key (⌫) |
+| Toggle notes mode | pencil button in the top bar |
+| Pause | ⏸ in the top bar |
+| Back to menu | **MENU** in the top bar |
+| Resume after pause | tap the screen |
 
-## Struttura del progetto
+## Project structure
 
-- `docs/design/` — documento di design
-- `docs/plans/` — piani di implementazione (motore, sessione, firmware)
-- `docs/mockups/` — mockup HTML dei layout esplorati in fase di design (layout scelto: **C★**)
-- `docs/images/` — mockup SVG delle schermate (vedi sezione *Schermate*), generati da `scripts/gen_mockups.py`
-- `scripts/sermon.py` — cattura "bounded" del monitor seriale (utile per debug)
+- `docs/design/` — design document
+- `docs/plans/` — implementation plans (engine, session, firmware)
+- `docs/mockups/` — HTML mockups of the layouts explored during design (chosen layout: **C★**)
+- `docs/images/` — SVG mockups of the screens (see [Screens](#screens)), generated by `scripts/gen_mockups.py`
+- `scripts/gen_mockups.py` — regenerates the screen mockups (see below)
+- `scripts/gen_fonts.md` — how the generated LVGL fonts (`font_eraser`, `font_jp56`) are produced with `lv_font_conv`
+- `scripts/sermon.py` — "bounded" serial-monitor capture (handy for debugging)
 
-## Licenza
+## Regenerating the screenshots
 
-Codice del progetto rilasciato sotto licenza **MIT** — vedi [LICENSE](LICENSE).
+The screenshots in [Screens](#screens) are **vector mockups**, not device captures. They
+are produced by a small Python script that mirrors the real palette
+([`include/ui_theme.h`](include/ui_theme.h)) and layout ([`src/ui.cpp`](src/ui.cpp)):
 
-Il layer di porting del display (`src/lvgl_port_v8.cpp`, `include/lvgl_port_v8.h`,
-`include/ESP_Panel_*.h`) deriva dagli esempi Espressif/Waveshare ed è soggetto alle
-rispettive licenze (CC0-1.0 / Apache-2.0) indicate nelle intestazioni dei file.
-[LVGL](https://lvgl.io) è distribuito sotto licenza MIT.
+```bash
+python scripts/gen_mockups.py
+```
+
+This rewrites `docs/images/{splash,menu,game,pause,win}.svg` in place. When the UI
+changes (colors, layout, labels), update the palette/layout constants at the top of
+[`scripts/gen_mockups.py`](scripts/gen_mockups.py) and re-run it. (For true device
+captures, take a screenshot from the panel and drop the PNGs into `docs/images/`,
+updating the links above.)
+
+## License
+
+Project code released under the **MIT** license — see [LICENSE](LICENSE).
+
+The display porting layer (`src/lvgl_port_v8.cpp`, `include/lvgl_port_v8.h`,
+`include/ESP_Panel_*.h`) derives from the Espressif/Waveshare examples and is subject to
+their respective licenses (CC0-1.0 / Apache-2.0) noted in the file headers.
+[LVGL](https://lvgl.io) is distributed under the MIT license. The generated fonts derive
+from Material Design Icons (Apache-2.0) and a Japanese font (e.g. Noto Sans JP, SIL OFL).
