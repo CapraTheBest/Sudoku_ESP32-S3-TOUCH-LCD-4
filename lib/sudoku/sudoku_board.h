@@ -28,6 +28,11 @@ public:
     bool isComplete() const;              // tutte le celle non-zero
     bool isSolved() const;                // completa e uguale a solution
 
+    // true se la cifra d (1..9) è piazzata correttamente in tutte e 9 le sue
+    // posizioni (9 celle con valore d, ognuna uguale alla soluzione). Usato
+    // per disabilitare il tasto del tastierino quando la cifra è completata.
+    bool isDigitComplete(uint8_t d) const;
+
     // Marca in out[81] le celle in conflitto (duplicato in riga/colonna/blocco).
     // Ritorna il numero di celle in conflitto.
     int conflicts(bool out[CELLS]) const;

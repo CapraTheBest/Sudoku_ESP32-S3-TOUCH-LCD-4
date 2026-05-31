@@ -20,6 +20,7 @@ static void showWin();
 // ===================== stato schermata di gioco =====================
 static lv_obj_t *g_cell[81];
 static lv_obj_t *g_cellLabel[81];
+static lv_obj_t *g_numBtn[10];          // tasti tastierino 1..9 (indice = cifra)
 static lv_obj_t *g_timerLabel = nullptr;
 static lv_timer_t *g_tick = nullptr;
 static lv_timer_t *g_flash = nullptr;
@@ -84,6 +85,15 @@ static void refreshGame() {
         if (same) bg = theme::same();
         if (i == sel) bg = theme::cellSel();
         lv_obj_set_style_bg_color(g_cell[i], bg, 0);
+    }
+
+    // Tasti del tastierino: spegni la cifra completata (9 piazzamenti corretti).
+    for (int d = 1; d <= 9; d++) {
+        if (!g_numBtn[d]) continue;
+        bool done = S->board().isDigitComplete((uint8_t)d);
+        lv_obj_set_style_opa(g_numBtn[d], done ? LV_OPA_40 : LV_OPA_COVER, 0);
+        if (done) lv_obj_clear_flag(g_numBtn[d], LV_OBJ_FLAG_CLICKABLE);
+        else      lv_obj_add_flag(g_numBtn[d], LV_OBJ_FLAG_CLICKABLE);
     }
 }
 
@@ -275,6 +285,7 @@ static void showGame() {
     int totalW = n * bw + (n - 1) * gap;
     int startX = (480 - totalW) / 2;
     int padY = 56 + gw + 10;            // sotto la griglia
+    for (int i = 0; i < 10; i++) g_numBtn[i] = nullptr;
     for (int k = 0; k < n; k++) {
         const char *txt;
         char digit[2] = {0, 0};
@@ -285,6 +296,7 @@ static void showGame() {
                                  theme::accent2(), num_cb, udata);
         lv_obj_set_size(b, bw, 58);
         lv_obj_set_pos(b, startX + k * (bw + gap), padY);
+        if (k < 9) g_numBtn[k + 1] = b;
     }
 
     refreshGame();

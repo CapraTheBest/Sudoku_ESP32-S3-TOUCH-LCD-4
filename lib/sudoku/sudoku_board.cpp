@@ -48,6 +48,17 @@ bool Board::isSolved() const {
     for (int i = 0; i < CELLS; i++) if (value_[i] != solution_[i]) return false;
     return true;
 }
+bool Board::isDigitComplete(uint8_t d) const {
+    if (d < 1 || d > 9) return false;
+    int n = 0;
+    for (int i = 0; i < CELLS; i++) {
+        if (value_[i] != d) continue;
+        if (value_[i] != solution_[i]) return false;  // piazzata ma sbagliata
+        n++;
+    }
+    return n == 9;
+}
+
 int Board::conflicts(bool out[CELLS]) const {
     for (int i = 0; i < CELLS; i++) out[i] = false;
     for (int idx = 0; idx < CELLS; idx++) {

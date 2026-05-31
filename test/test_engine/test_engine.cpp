@@ -220,6 +220,29 @@ void test_generate_puzzle_givens_within_band(void) {
     TEST_ASSERT_TRUE(hard >= 26 && hard <= 42);
 }
 
+void test_is_digit_complete(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+
+    // Solo i given piazzati: nessuna cifra è completa (9 corretti). Fuori range -> false.
+    TEST_ASSERT_FALSE(b.isDigitComplete(5));
+    TEST_ASSERT_FALSE(b.isDigitComplete(0));
+    TEST_ASSERT_FALSE(b.isDigitComplete(10));
+
+    // Piazza tutta la soluzione: ogni cifra 1..9 ha 9 piazzamenti corretti.
+    for (int i = 0; i < 81; i++) if (!b.isGiven(i)) b.setValue(i, SOLUTION[i]);
+    for (uint8_t d = 1; d <= 9; d++) TEST_ASSERT_TRUE(b.isDigitComplete(d));
+
+    // Sostituisci un 5 libero con un 6: 5 scende a 8, 6 ha un piazzamento errato.
+    int idx5 = -1;
+    for (int i = 0; i < 81; i++) if (!b.isGiven(i) && SOLUTION[i] == 5) { idx5 = i; break; }
+    TEST_ASSERT_TRUE(idx5 >= 0);
+    b.setValue(idx5, 6);
+    TEST_ASSERT_FALSE(b.isDigitComplete(5));   // ora solo 8 piazzamenti
+    TEST_ASSERT_FALSE(b.isDigitComplete(6));   // 9 in conteggio ma uno sbagliato
+}
+
 void test_board_rejects_out_of_range_index(void) {
     bool given[81]; givenMaskFromPuzzle(given);
     sudoku::Board b;
@@ -248,6 +271,7 @@ int main(int, char **) {
     RUN_TEST(test_board_complete_but_wrong_is_not_solved);
     RUN_TEST(test_board_conflicts_detects_row_duplicate);
     RUN_TEST(test_board_conflicts_none_on_valid_partial);
+    RUN_TEST(test_is_digit_complete);
     RUN_TEST(test_generate_solution_is_valid_full_grid);
     RUN_TEST(test_generate_solution_varies_with_seed);
     RUN_TEST(test_generate_puzzle_has_unique_solution);
