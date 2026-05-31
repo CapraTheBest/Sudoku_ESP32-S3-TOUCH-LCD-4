@@ -60,8 +60,8 @@
 #define LV_LAYER_SIMPLE_BUF_SIZE    (24 * 1024)
 #define LV_IMG_CACHE_DEF_SIZE       0
 #define LV_GRADIENT_MAX_STOPS       2
-#define LV_DISP_DEF_REFR_PERIOD     30                /* ms */
-#define LV_INDEV_DEF_READ_PERIOD    30
+#define LV_DISP_DEF_REFR_PERIOD     16                /* ms (~60 fps) */
+#define LV_INDEV_DEF_READ_PERIOD    10                /* ms: touch campionato piu' spesso = piu' reattivo */
 #define LV_INDEV_DEF_LONG_PRESS_TIME 400
 #define LV_INDEV_DEF_LONG_PRESS_REP_TIME 100
 #define LV_INDEV_DEF_GESTURE_LIMIT  50
@@ -70,7 +70,7 @@
 /* ============================================================
  *                FONTS
  * ============================================================ */
-#define LV_FONT_MONTSERRAT_12       0
+#define LV_FONT_MONTSERRAT_12       1
 #define LV_FONT_MONTSERRAT_14       1
 #define LV_FONT_MONTSERRAT_16       1
 #define LV_FONT_MONTSERRAT_18       1
@@ -83,6 +83,9 @@
 #define LV_FONT_MONTSERRAT_32       0
 #define LV_FONT_MONTSERRAT_40       0
 #define LV_FONT_MONTSERRAT_48       1
+
+/* Font monospaziato per gli appunti/note del Sudoku (colonne 3x3 allineate) */
+#define LV_FONT_UNSCII_8            1
 
 #define LV_FONT_DEFAULT             &lv_font_montserrat_14
 #define LV_FONT_FMT_TXT_LARGE       0

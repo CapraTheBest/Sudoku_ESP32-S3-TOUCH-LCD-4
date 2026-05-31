@@ -21,4 +21,8 @@ void clearSavedGame();
 uint32_t bestTime(sudoku::Difficulty d);
 void     setBestTime(sudoku::Difficulty d, uint32_t seconds);
 
+// --- Lingua (0 = EN, 1 = IT; 0xFF = non impostata) ---
+uint8_t language();
+void    setLanguage(uint8_t lang);
+
 } // namespace storage

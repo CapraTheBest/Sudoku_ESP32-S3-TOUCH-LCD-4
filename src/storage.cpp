@@ -74,4 +74,15 @@ void setBestTime(sudoku::Difficulty d, uint32_t seconds) {
     prefs.putUInt(bestKey(d), seconds);
 }
 
+// --- Lingua -----------------------------------------------------------------
+static const char *KEY_LANG = "lang";
+
+uint8_t language() {
+    return prefs.getUChar(KEY_LANG, 0xFF);
+}
+
+void setLanguage(uint8_t lang) {
+    prefs.putUChar(KEY_LANG, lang);
+}
+
 } // namespace storage

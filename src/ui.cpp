@@ -6,12 +6,15 @@
 
 #include "ui_theme.h"
 #include "storage.h"
+#include "i18n.h"
+#include "fonts_extra.h"
 
 namespace ui {
 
 static sudoku::GameSession *S = nullptr;
 
 // forward
+static void showSplash();
 static void showMenu();
 static void showGame();
 static void showPause();
@@ -39,11 +42,11 @@ static void fmtTime(uint32_t ms, char *buf, size_t n) {
 
 static const char *difName(sudoku::Difficulty d) {
     switch (d) {
-        case sudoku::Difficulty::Easy:   return "Facile";
-        case sudoku::Difficulty::Medium: return "Medio";
-        case sudoku::Difficulty::Hard:   return "Difficile";
+        case sudoku::Difficulty::Easy:   return i18n::tr(i18n::K_EASY);
+        case sudoku::Difficulty::Medium: return i18n::tr(i18n::K_MEDIUM);
+        case sudoku::Difficulty::Hard:   return i18n::tr(i18n::K_HARD);
     }
-    return "Medio";
+    return i18n::tr(i18n::K_MEDIUM);
 }
 
 static void killTimers() {
@@ -84,7 +87,7 @@ static void refreshGame() {
     uint8_t selVal = sel >= 0 ? S->board().value(sel) : 0;
 
     char t[2] = {0, 0};
-    char notesBuf[16];
+    char notesBuf[20];   // "d d d\nd d d\nd d d\0" = 18 byte (16 era troppo corto -> stack smash)
     for (int i = 0; i < 81; i++) {
         uint8_t v = S->board().value(i);
         uint16_t notes = S->board().notes(i);
@@ -97,8 +100,13 @@ static void refreshGame() {
         } else if (notes) {
             buildNotesText(notes, notesBuf);
             lv_label_set_text(g_cellLabel[i], notesBuf);
-            lv_obj_set_style_text_font(g_cellLabel[i], &lv_font_montserrat_12, 0);
-            lv_obj_set_style_text_line_space(g_cellLabel[i], -1, 0);
+            // font monospaziato: ogni riga e' larga esattamente 5 caratteri,
+            // quindi i candidati restano allineati in una griglia 3x3 pulita
+            lv_obj_set_style_text_font(g_cellLabel[i], &lv_font_unscii_8, 0);
+            lv_obj_set_style_text_line_space(g_cellLabel[i], 2, 0);
+            // comprime le colonne (font monospaziato) per lasciare margine dai bordi
+            lv_obj_set_style_text_letter_space(g_cellLabel[i], -3, 0);
+            lv_obj_set_style_text_align(g_cellLabel[i], LV_TEXT_ALIGN_CENTER, 0);
             lv_obj_set_style_text_color(g_cellLabel[i], theme::noteInk(), 0);
         } else {
             lv_label_set_text(g_cellLabel[i], "");
@@ -255,7 +263,7 @@ static void showMenu() {
 
     // Riprendi (solo se c'e' una partita salvata valida)
     if (storage::hasSavedGame()) {
-        lv_obj_t *b = makeButton(scr, "Riprendi partita", &lv_font_montserrat_24,
+        lv_obj_t *b = makeButton(scr, i18n::tr(i18n::K_RESUME), &lv_font_montserrat_24,
                                  theme::accent(), resumeSaved_cb, 0);
         lv_obj_set_size(b, 300, 50);
         lv_obj_align(b, LV_ALIGN_TOP_MID, 0, y + 6);
@@ -270,7 +278,7 @@ static void showMenu() {
     fmtTime(re * 1000, e, sizeof(e));
     fmtTime(rm * 1000, m, sizeof(m));
     fmtTime(rh * 1000, h, sizeof(h));
-    snprintf(rec, sizeof(rec), "Record  F %s   M %s   D %s",
+    snprintf(rec, sizeof(rec), i18n::tr(i18n::K_RECORDS_FMT),
              re ? e : "--:--", rm ? m : "--:--", rh ? h : "--:--");
     lv_obj_t *recL = lv_label_create(scr);
     lv_label_set_text(recL, rec);
@@ -299,22 +307,22 @@ static void showGame() {
     lv_obj_set_style_text_font(g_timerLabel, &lv_font_montserrat_28, 0);
     lv_obj_align(g_timerLabel, LV_ALIGN_LEFT_MID, 14, 0);
 
-    lv_obj_t *bNew = makeButton(bar, LV_SYMBOL_PLUS, &lv_font_montserrat_24,
+    lv_obj_t *bNew = makeButton(bar, "MENU", &lv_font_montserrat_18,
                                 theme::accent2(), new_cb, 0);
-    lv_obj_set_size(bNew, 46, 38);
+    lv_obj_set_size(bNew, 74, 38);
     lv_obj_align(bNew, LV_ALIGN_RIGHT_MID, -8, 0);
 
     lv_obj_t *bPause = makeButton(bar, LV_SYMBOL_PAUSE, &lv_font_montserrat_24,
                                   theme::accent2(), pause_cb, 0);
     lv_obj_set_size(bPause, 46, 38);
-    lv_obj_align(bPause, LV_ALIGN_RIGHT_MID, -62, 0);
+    lv_obj_align(bPause, LV_ALIGN_RIGHT_MID, -88, 0);
 
     // toggle appunti (matita): evidenziato quando attivo
     g_notesMode = false;
     g_notesBtn = makeButton(bar, LV_SYMBOL_EDIT, &lv_font_montserrat_24,
                             theme::accent2(), notes_cb, 0);
     lv_obj_set_size(g_notesBtn, 46, 38);
-    lv_obj_align(g_notesBtn, LV_ALIGN_RIGHT_MID, -116, 0);
+    lv_obj_align(g_notesBtn, LV_ALIGN_RIGHT_MID, -140, 0);
 
     // --- griglia ---
     int gw = cellX(8) + CELL;   // larghezza/altezza totale griglia
@@ -347,16 +355,23 @@ static void showGame() {
     int padY = 56 + gw + 10;            // sotto la griglia
     for (int i = 0; i < 10; i++) g_numBtn[i] = nullptr;
     for (int k = 0; k < n; k++) {
-        const char *txt;
         char digit[2] = {0, 0};
-        int udata;
-        if (k < 9) { digit[0] = (char)('1' + k); txt = digit; udata = k + 1; }
-        else       { txt = LV_SYMBOL_BACKSPACE;  udata = 0; }
+        const char *txt = "";
+        int udata = (k < 9) ? (k + 1) : 0;
+        if (k < 9) { digit[0] = (char)('1' + k); txt = digit; }
         lv_obj_t *b = makeButton(scr, txt, &lv_font_montserrat_28,
                                  theme::accent2(), num_cb, udata);
         lv_obj_set_size(b, bw, 58);
         lv_obj_set_pos(b, startX + k * (bw + gap), padY);
-        if (k < 9) g_numBtn[k + 1] = b;
+        if (k < 9) {
+            g_numBtn[k + 1] = b;
+        } else {
+            // tasto cancella: glifo mdi-eraser (font generato)
+            lv_obj_t *lbl = lv_obj_get_child(b, 0);
+            lv_label_set_text(lbl, SYM_ERASER);
+            lv_obj_set_style_text_font(lbl, &font_eraser, 0);
+            lv_obj_set_style_text_color(lbl, theme::ink(), 0);
+        }
     }
 
     refreshGame();
@@ -374,13 +389,13 @@ static void showPause() {
     lv_obj_add_event_cb(scr, resume_cb, LV_EVENT_CLICKED, nullptr);
 
     lv_obj_t *t = lv_label_create(scr);
-    lv_label_set_text(t, "In pausa");
+    lv_label_set_text(t, i18n::tr(i18n::K_PAUSED));
     lv_obj_set_style_text_color(t, theme::ink(), 0);
     lv_obj_set_style_text_font(t, &lv_font_montserrat_48, 0);
     lv_obj_align(t, LV_ALIGN_CENTER, 0, -20);
 
     lv_obj_t *s = lv_label_create(scr);
-    lv_label_set_text(s, "tocca per riprendere");
+    lv_label_set_text(s, i18n::tr(i18n::K_TAP_RESUME));
     lv_obj_set_style_text_color(s, theme::muted(), 0);
     lv_obj_set_style_text_font(s, &lv_font_montserrat_18, 0);
     lv_obj_align(s, LV_ALIGN_CENTER, 0, 40);
@@ -402,7 +417,7 @@ static void showWin() {
     plainStyle(scr, theme::bg(), 0);
 
     lv_obj_t *t = lv_label_create(scr);
-    lv_label_set_text(t, "Hai vinto!");
+    lv_label_set_text(t, i18n::tr(i18n::K_YOU_WON));
     lv_obj_set_style_text_color(t, theme::good(), 0);
     lv_obj_set_style_text_font(t, &lv_font_montserrat_48, 0);
     lv_obj_align(t, LV_ALIGN_TOP_MID, 0, 80);
@@ -417,13 +432,13 @@ static void showWin() {
 
     if (record) {
         lv_obj_t *rec = lv_label_create(scr);
-        lv_label_set_text(rec, "Nuovo record!");
+        lv_label_set_text(rec, i18n::tr(i18n::K_NEW_RECORD));
         lv_obj_set_style_text_color(rec, theme::good(), 0);
         lv_obj_set_style_text_font(rec, &lv_font_montserrat_24, 0);
         lv_obj_align(rec, LV_ALIGN_CENTER, 0, 40);
     }
 
-    lv_obj_t *b = makeButton(scr, "Menu", &lv_font_montserrat_28,
+    lv_obj_t *b = makeButton(scr, i18n::tr(i18n::K_MENU), &lv_font_montserrat_28,
                              theme::accent(), toMenu_cb, 0);
     lv_obj_set_size(b, 220, 56);
     lv_obj_align(b, LV_ALIGN_BOTTOM_MID, 0, -40);
@@ -431,10 +446,59 @@ static void showWin() {
     lv_scr_load_anim(scr, LV_SCR_LOAD_ANIM_FADE_IN, 150, 0, true);
 }
 
+// ===================== SPLASH / SCELTA LINGUA =====================
+static void lang_cb(lv_event_t *e) {
+    int l = (int)(intptr_t)lv_event_get_user_data(e);
+    i18n::setLang((i18n::Lang) l);
+    storage::setLanguage((uint8_t) l);
+    showMenu();
+}
+
+static void showSplash() {
+    killTimers();
+    lv_obj_t *scr = lv_obj_create(nullptr);
+    plainStyle(scr, theme::bg(), 0);
+
+    // "sol levante": cerchio rosso con i kanji 数独 al centro
+    lv_obj_t *sun = lv_obj_create(scr);
+    plainStyle(sun, lv_color_hex(0xd83a3a), 0);
+    lv_obj_set_size(sun, 180, 180);
+    lv_obj_set_style_radius(sun, LV_RADIUS_CIRCLE, 0);
+    lv_obj_align(sun, LV_ALIGN_TOP_MID, 0, 34);
+
+    lv_obj_t *k = lv_label_create(sun);
+    lv_label_set_text(k, SYM_KANJI_SUDOKU);     // 数独
+    lv_obj_set_style_text_font(k, &font_jp56, 0);
+    lv_obj_set_style_text_color(k, theme::ink(), 0);
+    lv_obj_center(k);
+
+    lv_obj_t *title = lv_label_create(scr);
+    lv_label_set_text(title, "SUDOKU");
+    lv_obj_set_style_text_font(title, &lv_font_montserrat_48, 0);
+    lv_obj_set_style_text_color(title, theme::ink(), 0);
+    lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 232);
+
+    // scelta lingua
+    lv_obj_t *bEn = makeButton(scr, "English", &lv_font_montserrat_28,
+                               theme::accent2(), lang_cb, (int) i18n::EN);
+    lv_obj_set_size(bEn, 280, 54);
+    lv_obj_align(bEn, LV_ALIGN_TOP_MID, 0, 318);
+
+    lv_obj_t *bIt = makeButton(scr, "Italiano", &lv_font_montserrat_28,
+                               theme::accent2(), lang_cb, (int) i18n::IT);
+    lv_obj_set_size(bIt, 280, 54);
+    lv_obj_align(bIt, LV_ALIGN_TOP_MID, 0, 384);
+
+    lv_scr_load_anim(scr, LV_SCR_LOAD_ANIM_FADE_IN, 200, 0, true);
+}
+
 // ===================== init =====================
 void init(sudoku::GameSession *session) {
     S = session;
-    showMenu();
+    // lingua salvata come default (verra' comunque riscelta nella splash)
+    uint8_t saved = storage::language();
+    if (saved == 0 || saved == 1) i18n::setLang((i18n::Lang) saved);
+    showSplash();
 }
 
 } // namespace ui
