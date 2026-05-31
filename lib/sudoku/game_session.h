@@ -25,6 +25,7 @@ public:
     void selectCell(int idx);          // idx in [0, CELLS); -1 deseleziona
     void enterValue(uint8_t v);        // 1..9 nella cella selezionata; vittoria -> Won
     void eraseSelected();              // = enterValue(0)
+    void toggleNote(uint8_t d);        // appunto d (1..9) nella cella selezionata
     void undo();
 
     void pause();                      // Playing -> Paused (ferma il tempo)
@@ -37,6 +38,7 @@ public:
         uint8_t  solution[CELLS];
         uint8_t  value[CELLS];
         bool     given[CELLS];
+        uint16_t notes[CELLS];
         uint32_t elapsedMs;
         uint8_t  difficulty;
         bool     valid;                // true solo se Playing/Paused

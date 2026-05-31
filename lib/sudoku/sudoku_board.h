@@ -20,7 +20,16 @@ public:
 
     // Imposta value[idx] (val 0..9, 0 = cancella). No-op su cella data.
     // Ritorna true se la mossa è stata applicata (e registrata per l'undo).
+    // Inserire una cifra (val 1..9) azzera gli appunti di quella cella.
     bool setValue(int idx, uint8_t val);
+
+    // --- Appunti (pencil marks) -------------------------------------------
+    // Maschera di bit dei candidati: bit (d-1) acceso = candidato d presente.
+    uint16_t notes(int idx) const;
+    void     setNotesMask(int idx, uint16_t mask);   // usato dal restore
+    // Inverte il candidato d (1..9) nella cella. Solo su cella vuota non-data.
+    // Ritorna true se l'appunto è stato modificato.
+    bool     toggleNote(int idx, uint8_t d);
 
     bool canUndo() const;
     bool undo();                          // ripristina l'ultima mossa
@@ -41,9 +50,10 @@ public:
     int givenCount() const;
 
 private:
-    uint8_t solution_[CELLS];
-    uint8_t value_[CELLS];
-    bool    given_[CELLS];
+    uint8_t  solution_[CELLS];
+    uint8_t  value_[CELLS];
+    bool     given_[CELLS];
+    uint16_t notes_[CELLS];
     struct Move { int idx; uint8_t oldVal; };
     std::vector<Move> history_;
 };

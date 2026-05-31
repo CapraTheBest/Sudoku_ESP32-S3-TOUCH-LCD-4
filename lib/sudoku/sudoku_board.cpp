@@ -3,7 +3,9 @@
 namespace sudoku {
 
 Board::Board() {
-    for (int i = 0; i < CELLS; i++) { solution_[i] = 0; value_[i] = 0; given_[i] = false; }
+    for (int i = 0; i < CELLS; i++) {
+        solution_[i] = 0; value_[i] = 0; given_[i] = false; notes_[i] = 0;
+    }
 }
 
 void Board::reset(const uint8_t solution[CELLS], const bool given[CELLS]) {
@@ -11,6 +13,7 @@ void Board::reset(const uint8_t solution[CELLS], const bool given[CELLS]) {
         solution_[i] = solution[i];
         given_[i] = given[i];
         value_[i] = given[i] ? solution[i] : 0;
+        notes_[i] = 0;
     }
     history_.clear();
 }
@@ -27,6 +30,22 @@ bool Board::setValue(int idx, uint8_t val) {
     if (val > 9) return false;
     history_.push_back({idx, value_[idx]});
     value_[idx] = val;
+    if (val >= 1) notes_[idx] = 0;   // inserire una cifra cancella gli appunti
+    return true;
+}
+
+uint16_t Board::notes(int idx) const { return inRange(idx) ? notes_[idx] : 0; }
+
+void Board::setNotesMask(int idx, uint16_t mask) {
+    if (!inRange(idx)) return;
+    notes_[idx] = mask & 0x1FF;   // solo i 9 bit candidati
+}
+
+bool Board::toggleNote(int idx, uint8_t d) {
+    if (!inRange(idx)) return false;
+    if (d < 1 || d > 9) return false;
+    if (given_[idx] || value_[idx] != 0) return false;  // solo celle vuote libere
+    notes_[idx] ^= (uint16_t)(1u << (d - 1));
     return true;
 }
 

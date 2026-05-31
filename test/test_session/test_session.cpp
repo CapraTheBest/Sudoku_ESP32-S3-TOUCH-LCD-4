@@ -142,6 +142,17 @@ void test_snapshot_restore_roundtrip(void) {
     int free = firstFreeCell(g.board());
     g.selectCell(free);
     g.enterValue(g.board().solutionAt(free));
+
+    // Aggiunge appunti su un'altra cella libera (in gioco) per il round-trip.
+    int free2 = -1;
+    for (int i = 0; i < sudoku::CELLS; i++)
+        if (!g.board().isGiven(i) && g.board().value(i) == 0) { free2 = i; break; }
+    g.selectCell(free2);
+    g.toggleNote(3);
+    g.toggleNote(7);
+    uint16_t notesBefore = g.board().notes(free2);
+    TEST_ASSERT_EQUAL_UINT16((1u << 2) | (1u << 6), notesBefore);
+
     s_now = 3000;
     g.pause();   // elapsed = 3000
 
@@ -157,6 +168,7 @@ void test_snapshot_restore_roundtrip(void) {
     TEST_ASSERT_EQUAL(sudoku::Difficulty::Medium, g2.difficulty());
     TEST_ASSERT_EQUAL_UINT32(3000, g2.elapsedMs());        // congelato (Paused)
     TEST_ASSERT_EQUAL_UINT8(g.board().value(free), g2.board().value(free));
+    TEST_ASSERT_EQUAL_UINT16(notesBefore, g2.board().notes(free2)); // appunti ripristinati
     TEST_ASSERT_EQUAL_INT(g.board().givenCount(), g2.board().givenCount());
     // riprendendo, il tempo riparte da dov'era
     g2.resume();

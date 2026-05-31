@@ -15,6 +15,7 @@ inline lv_color_t thick()   { return lv_color_hex(0x5a6f9a); } // separatori 3x3
 inline lv_color_t ink()     { return lv_color_hex(0xe8ebf0); } // testo chiaro / dati iniziali
 inline lv_color_t userNum() { return lv_color_hex(0x6db0ff); } // numeri inseriti dall'utente
 inline lv_color_t muted()   { return lv_color_hex(0x8b93a3); } // testo secondario
+inline lv_color_t noteInk() { return lv_color_hex(0x9aa3b5); } // appunti (pencil marks)
 inline lv_color_t accent()  { return lv_color_hex(0x5b8cff); } // accento
 inline lv_color_t accent2() { return lv_color_hex(0x23304d); } // bottoni soft
 inline lv_color_t danger()  { return lv_color_hex(0xe5484d); } // conflitti / errori

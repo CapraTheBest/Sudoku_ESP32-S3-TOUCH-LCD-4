@@ -21,6 +21,8 @@ static void showWin();
 static lv_obj_t *g_cell[81];
 static lv_obj_t *g_cellLabel[81];
 static lv_obj_t *g_numBtn[10];          // tasti tastierino 1..9 (indice = cifra)
+static lv_obj_t *g_notesBtn = nullptr;  // toggle modalita' appunti
+static bool      g_notesMode = false;   // true = i tasti scrivono appunti
 static lv_obj_t *g_timerLabel = nullptr;
 static lv_timer_t *g_tick = nullptr;
 static lv_timer_t *g_flash = nullptr;
@@ -59,6 +61,20 @@ static void plainStyle(lv_obj_t *o, lv_color_t bg, int radius) {
     lv_obj_clear_flag(o, LV_OBJ_FLAG_SCROLLABLE);
 }
 
+// Costruisce la stringa 3x3 degli appunti ("1 2 3\n4 5 6\n7 8 9", assente = spazio).
+static void buildNotesText(uint16_t mask, char *buf) {
+    int p = 0;
+    for (int r = 0; r < 3; r++) {
+        for (int c = 0; c < 3; c++) {
+            int d = r * 3 + c + 1;
+            buf[p++] = (mask & (1u << (d - 1))) ? (char)('0' + d) : ' ';
+            if (c < 2) buf[p++] = ' ';
+        }
+        if (r < 2) buf[p++] = '\n';
+    }
+    buf[p] = 0;
+}
+
 // ===================== refresh griglia =====================
 static void refreshGame() {
     if (!S) return;
@@ -68,12 +84,25 @@ static void refreshGame() {
     uint8_t selVal = sel >= 0 ? S->board().value(sel) : 0;
 
     char t[2] = {0, 0};
+    char notesBuf[16];
     for (int i = 0; i < 81; i++) {
         uint8_t v = S->board().value(i);
-        if (v) { t[0] = (char)('0' + v); lv_label_set_text(g_cellLabel[i], t); }
-        else   { lv_label_set_text(g_cellLabel[i], ""); }
-        lv_obj_set_style_text_color(g_cellLabel[i],
-            S->board().isGiven(i) ? theme::ink() : theme::userNum(), 0);
+        uint16_t notes = S->board().notes(i);
+        if (v) {
+            t[0] = (char)('0' + v);
+            lv_label_set_text(g_cellLabel[i], t);
+            lv_obj_set_style_text_font(g_cellLabel[i], &lv_font_montserrat_28, 0);
+            lv_obj_set_style_text_color(g_cellLabel[i],
+                S->board().isGiven(i) ? theme::ink() : theme::userNum(), 0);
+        } else if (notes) {
+            buildNotesText(notes, notesBuf);
+            lv_label_set_text(g_cellLabel[i], notesBuf);
+            lv_obj_set_style_text_font(g_cellLabel[i], &lv_font_montserrat_12, 0);
+            lv_obj_set_style_text_line_space(g_cellLabel[i], -1, 0);
+            lv_obj_set_style_text_color(g_cellLabel[i], theme::noteInk(), 0);
+        } else {
+            lv_label_set_text(g_cellLabel[i], "");
+        }
 
         int r = i / 9, c = i % 9;
         lv_color_t bg = theme::cell();
@@ -117,8 +146,32 @@ static void cell_cb(lv_event_t *e) {
     refreshGame();
 }
 
+static void notes_cb(lv_event_t *) {
+    g_notesMode = !g_notesMode;
+    if (g_notesBtn)
+        lv_obj_set_style_bg_color(g_notesBtn,
+            g_notesMode ? theme::accent() : theme::accent2(), 0);
+}
+
 static void num_cb(lv_event_t *e) {
     int d = (int)(intptr_t)lv_event_get_user_data(e);   // 0 = cancella
+
+    if (g_notesMode) {
+        int sel = S->selectedCell();
+        if (sel >= 0) {
+            if (d == 0) {
+                // backspace in modalita' appunti: svuota gli appunti della cella
+                uint16_t m = S->board().notes(sel);
+                for (int n = 1; n <= 9; n++)
+                    if (m & (1u << (n - 1))) S->toggleNote((uint8_t)n);
+            } else {
+                S->toggleNote((uint8_t)d);
+            }
+        }
+        refreshGame();
+        return;
+    }
+
     S->enterValue((uint8_t)d);
     if (S->state() == sudoku::GameState::Won) { showWin(); return; }
     refreshGame();
@@ -255,6 +308,13 @@ static void showGame() {
                                   theme::accent2(), pause_cb, 0);
     lv_obj_set_size(bPause, 46, 38);
     lv_obj_align(bPause, LV_ALIGN_RIGHT_MID, -62, 0);
+
+    // toggle appunti (matita): evidenziato quando attivo
+    g_notesMode = false;
+    g_notesBtn = makeButton(bar, LV_SYMBOL_EDIT, &lv_font_montserrat_24,
+                            theme::accent2(), notes_cb, 0);
+    lv_obj_set_size(g_notesBtn, 46, 38);
+    lv_obj_align(g_notesBtn, LV_ALIGN_RIGHT_MID, -116, 0);
 
     // --- griglia ---
     int gw = cellX(8) + CELL;   // larghezza/altezza totale griglia

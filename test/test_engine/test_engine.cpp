@@ -243,6 +243,39 @@ void test_is_digit_complete(void) {
     TEST_ASSERT_FALSE(b.isDigitComplete(6));   // 9 in conteggio ma uno sbagliato
 }
 
+void test_board_notes_toggle_and_clear_on_value(void) {
+    bool given[81]; givenMaskFromPuzzle(given);
+    sudoku::Board b;
+    b.reset(SOLUTION, given);
+
+    int free = 2;  // PUZZLE[2] = 0 -> cella libera
+    TEST_ASSERT_EQUAL_UINT16(0, b.notes(free));
+
+    // Aggiunge i candidati 1 e 9.
+    TEST_ASSERT_TRUE(b.toggleNote(free, 1));
+    TEST_ASSERT_TRUE(b.toggleNote(free, 9));
+    TEST_ASSERT_EQUAL_UINT16((1u << 0) | (1u << 8), b.notes(free));
+
+    // Toggle di nuovo 1 -> rimosso.
+    TEST_ASSERT_TRUE(b.toggleNote(free, 1));
+    TEST_ASSERT_EQUAL_UINT16((1u << 8), b.notes(free));
+
+    // Inserire una cifra azzera gli appunti della cella.
+    b.setValue(free, 4);
+    TEST_ASSERT_EQUAL_UINT16(0, b.notes(free));
+
+    // Appunti rifiutati su cella piena, data o con cifra fuori range.
+    TEST_ASSERT_FALSE(b.toggleNote(free, 5));   // ora ha un valore
+    TEST_ASSERT_FALSE(b.toggleNote(0, 5));      // cella data
+    TEST_ASSERT_FALSE(b.toggleNote(free, 0));   // cifra fuori range
+    TEST_ASSERT_FALSE(b.toggleNote(free, 10));
+
+    // setNotesMask tiene solo i 9 bit candidati.
+    b.setValue(free, 0);                         // svuota di nuovo
+    b.setNotesMask(free, 0xFFFF);
+    TEST_ASSERT_EQUAL_UINT16(0x1FF, b.notes(free));
+}
+
 void test_board_rejects_out_of_range_index(void) {
     bool given[81]; givenMaskFromPuzzle(given);
     sudoku::Board b;
@@ -272,6 +305,7 @@ int main(int, char **) {
     RUN_TEST(test_board_conflicts_detects_row_duplicate);
     RUN_TEST(test_board_conflicts_none_on_valid_partial);
     RUN_TEST(test_is_digit_complete);
+    RUN_TEST(test_board_notes_toggle_and_clear_on_value);
     RUN_TEST(test_generate_solution_is_valid_full_grid);
     RUN_TEST(test_generate_solution_varies_with_seed);
     RUN_TEST(test_generate_puzzle_has_unique_solution);
