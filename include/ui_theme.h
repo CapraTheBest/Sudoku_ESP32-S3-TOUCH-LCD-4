@@ -7,9 +7,9 @@ namespace theme {
 inline lv_color_t bg()      { return lv_color_hex(0x0f1115); } // sfondo schermo
 inline lv_color_t panel()   { return lv_color_hex(0x171a21); } // barre/pannelli
 inline lv_color_t cell()    { return lv_color_hex(0x222732); } // cella normale
-inline lv_color_t peer()    { return lv_color_hex(0x2a3550); } // riga/colonna/blocco della selezione
-inline lv_color_t same()    { return lv_color_hex(0x33406a); } // stesso numero selezionato
-inline lv_color_t cellSel() { return lv_color_hex(0x5b8cff); } // cella selezionata
+inline lv_color_t peer()    { return lv_color_hex(0x2a3142); } // riga/colonna/blocco della selezione (slate neutro)
+inline lv_color_t same()    { return lv_color_hex(0x4a3d6b); } // stesso numero selezionato (viola, distinto)
+inline lv_color_t cellSel() { return lv_color_hex(0x3b6fe0); } // cella selezionata (blu acceso)
 inline lv_color_t grid()    { return lv_color_hex(0x384055); } // linee griglia
 inline lv_color_t thick()   { return lv_color_hex(0x5a6f9a); } // separatori 3x3
 inline lv_color_t ink()     { return lv_color_hex(0xe8ebf0); } // testo chiaro / dati iniziali
